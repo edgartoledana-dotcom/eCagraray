@@ -1,0 +1,20 @@
+# Permanent hosting on Render (free tier available)
+# Connect your GitHub repo at https://dashboard.render.com
+# or use: render blueprint launch
+
+services:
+  - type: web
+    name: ecagraray
+    runtime: docker
+    region: singapore
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4173"
+    disk:
+      name: ecagraray-data
+      mountPath: /app/data
+      sizeGB: 1

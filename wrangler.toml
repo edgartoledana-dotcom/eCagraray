@@ -1,0 +1,19 @@
+# Cloudflare Workers — permanent free hosting (no credit card required)
+# Deploy: npm run deploy:cloudflare
+
+name = "ecagraray"
+main = ".output/server/index.mjs"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".output/public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ecagraray"
+database_id = "local-ecagraray-db"
+
+[vars]
+NODE_ENV = "production"

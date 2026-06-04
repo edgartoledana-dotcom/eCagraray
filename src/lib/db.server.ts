@@ -22,7 +22,7 @@ export interface DatabaseSchema {
 
 const DB_PATH = path.resolve(process.cwd(), "data", "ecagraray.db.json");
 
-function defaultDatabase(): DatabaseSchema {
+export function defaultDatabase(): DatabaseSchema {
   return {
     users: [],
     barangay: {
@@ -45,19 +45,50 @@ async function ensureDatabaseFolder() {
   await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
 }
 
-export async function readDatabase(): Promise<DatabaseSchema> {
+async function readFromFilesystem(): Promise<DatabaseSchema> {
   await ensureDatabaseFolder();
   try {
     const contents = await fs.readFile(DB_PATH, "utf-8");
     return JSON.parse(contents) as DatabaseSchema;
-  } catch (error: unknown) {
+  } catch {
     const database = defaultDatabase();
-    await writeDatabase(database);
+    await writeToFilesystem(database);
     return database;
   }
 }
 
-export async function writeDatabase(database: DatabaseSchema) {
+async function writeToFilesystem(database: DatabaseSchema) {
   await ensureDatabaseFolder();
   await fs.writeFile(DB_PATH, JSON.stringify(database, null, 2), "utf-8");
+}
+
+async function tryD1() {
+  if (process.env.DEPLOY_TARGET !== "cloudflare") return null;
+  try {
+    const d1 = await import("./db-d1.server");
+    return d1;
+  } catch {
+    return null;
+  }
+}
+
+export async function readDatabase(): Promise<DatabaseSchema> {
+  const d1 = await tryD1();
+  if (d1) {
+    const fromD1 = await d1.readFromD1();
+    if (fromD1) return fromD1;
+    const database = defaultDatabase();
+    await d1.writeToD1(database);
+    return database;
+  }
+  return readFromFilesystem();
+}
+
+export async function writeDatabase(database: DatabaseSchema) {
+  const d1 = await tryD1();
+  if (d1) {
+    await d1.writeToD1(database);
+    return;
+  }
+  await writeToFilesystem(database);
 }

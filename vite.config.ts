@@ -6,7 +6,17 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+const cloudflareDeploy = process.env.DEPLOY_TARGET === "cloudflare";
+
 export default defineConfig({
+  nitro: cloudflareDeploy
+    ? {
+        preset: "cloudflare_module",
+        cloudflare: { deployConfig: true, nodeCompat: true },
+      }
+    : {
+        preset: "node-server",
+      },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

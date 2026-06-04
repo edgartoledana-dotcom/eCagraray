@@ -10,10 +10,11 @@ RUN npm run build
 FROM node:20-alpine AS runtime
 WORKDIR /app
 
-COPY --from=build /app/package.json ./
-COPY --from=build /app/dist ./dist
+ENV PORT=4173
+ENV NODE_ENV=production
 
-RUN npm install --production
+COPY --from=build /app/.output ./.output
+COPY --from=build /app/package.json ./
 
 EXPOSE 4173
-CMD ["node", "dist/server/server.js"]
+CMD ["node", ".output/server/index.mjs"]
