@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { readFromD1, writeToD1 } from "./db-d1.server";
+import { isD1, readFromD1, writeToD1 } from "./db-d1.server";
 
 export interface BarangayInfo {
   name: string;
@@ -69,21 +69,22 @@ async function writeToFilesystem(database: DatabaseSchema) {
 }
 
 export async function readDatabase(): Promise<DatabaseSchema> {
-  try {
+  const useD1 = await isD1();
+  if (useD1) {
     const fromD1 = await readFromD1();
     if (fromD1) return fromD1;
-  } catch (e) {
-    // Fallback if D1 is not accessible
+    const database = defaultDatabase();
+    await writeToD1(database);
+    return database;
   }
   return readFromFilesystem();
 }
 
 export async function writeDatabase(database: DatabaseSchema) {
-  try {
+  const useD1 = await isD1();
+  if (useD1) {
     await writeToD1(database);
     return;
-  } catch (e) {
-    // Fallback if D1 is not accessible
   }
   await writeToFilesystem(database);
 }

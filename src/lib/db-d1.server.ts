@@ -40,3 +40,8 @@ export async function writeToD1(database: DatabaseSchema) {
     .bind(STORE_KEY, JSON.stringify(database))
     .run();
 }
+
+export async function isD1(): Promise<boolean> {
+  const db = await getD1();
+  return db !== null;
+}
