@@ -1,0 +1,14 @@
+node_modules/
+dist/
+data/
+.env
+.env.local
+.DS_Store
+.cache
+/.turbo
+/.vite
+npm-debug.log*
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+.vscode/
