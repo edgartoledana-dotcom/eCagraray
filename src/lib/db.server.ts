@@ -20,8 +20,6 @@ export interface DatabaseSchema {
   events: unknown[];
 }
 
-const DB_PATH = path.resolve(process.cwd(), "data", "ecagraray.db.json");
-
 export function defaultDatabase(): DatabaseSchema {
   return {
     users: [],
@@ -41,14 +39,20 @@ export function defaultDatabase(): DatabaseSchema {
   };
 }
 
+function getDbPath(): string {
+  return path.resolve(process.cwd(), "data", "ecagraray.db.json");
+}
+
 async function ensureDatabaseFolder() {
-  await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
+  const dbPath = getDbPath();
+  await fs.mkdir(path.dirname(dbPath), { recursive: true });
 }
 
 async function readFromFilesystem(): Promise<DatabaseSchema> {
+  const dbPath = getDbPath();
   await ensureDatabaseFolder();
   try {
-    const contents = await fs.readFile(DB_PATH, "utf-8");
+    const contents = await fs.readFile(dbPath, "utf-8");
     return JSON.parse(contents) as DatabaseSchema;
   } catch {
     const database = defaultDatabase();
@@ -58,8 +62,9 @@ async function readFromFilesystem(): Promise<DatabaseSchema> {
 }
 
 async function writeToFilesystem(database: DatabaseSchema) {
+  const dbPath = getDbPath();
   await ensureDatabaseFolder();
-  await fs.writeFile(DB_PATH, JSON.stringify(database, null, 2), "utf-8");
+  await fs.writeFile(dbPath, JSON.stringify(database, null, 2), "utf-8");
 }
 
 async function tryD1() {

@@ -196,7 +196,7 @@ function Landing() {
             <div className="section-title text-3xl font-bold md:text-4xl">Contact the Barangay</div>
             <p className="text-base leading-8 text-muted-foreground">Information can be updated from the admin settings panel or shared directly with residents through announcements.</p>
             <ul className="space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm shadow-slate-900/5 glass-panel">
-              <li className="flex items-start gap-3"><Building2 className="mt-0.5 h-5 w-5 text-primary" /><div><div className="font-semibold">{info?.name}</div><div className="text-sm text-muted-foreground">{info?.municipality}, {info?.province}</div></div></li>
+              <li className="flex items-start gap-3"><Building2 className="mt-0.5 h-5 w-5 text-primary" /><div><div className="font-semibold">{info?.name}</div><div className="text-sm text-muted-foreground">{info?.municipality}Cagraray, Bato, Catanduanes{info?.province}</div></div></li>
               <li className="flex items-start gap-3"><MapPin className="mt-0.5 h-5 w-5 text-primary" /><div className="text-sm text-muted-foreground">{info?.address}</div></li>
               <li className="flex items-start gap-3"><Phone className="mt-0.5 h-5 w-5 text-primary" /><div className="text-sm text-muted-foreground">{info?.contact}</div></li>
               <li className="flex items-start gap-3"><Mail className="mt-0.5 h-5 w-5 text-primary" /><div className="text-sm text-muted-foreground">{info?.email}</div></li>
