@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useStored } from "../lib/store";
+import { useStored, ROLE_LABELS } from "../lib/store";
 import { Card } from "../components/ui-kit";
 import { Users, Home, AlertTriangle, FileText, HeartHandshake, Calendar, Bell, Activity, ArrowUpRight } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
@@ -101,7 +101,7 @@ function Overview() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-6">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">Telemetry Terminal</h1>
-          <p className="mt-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-widest">Active session: Node-{user?.fullName.split(" ")[0].toUpperCase()}</p>
+          <p className="mt-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-widest">Active session: Node-{(user?.fullName?.split(" ")[0] || "USER").toUpperCase()}</p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-[10px] font-bold text-primary uppercase tracking-widest shadow-inner">
           <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" /> SECURE HANDSHAKE STATUS OK
@@ -198,7 +198,7 @@ function Overview() {
             <h2 className="text-lg font-black text-slate-900 dark:text-white">Authorized Dispatch Panels</h2>
             <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">Quick access shortcuts assigned exclusively to your credentials clearance level.</p>
           </div>
-          <Badge label={`${ROLE_LABELS[user.role]} CLEARANCE`} />
+          <Badge label={`${user?.role ? ROLE_LABELS[user.role] : "RESIDENT"} CLEARANCE`} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {getRoleActions().map((act) => (
