@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, EyeOff, Shield, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Shield, ArrowLeft, ShieldCheck, Lock } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Login · e-Cagraray" }] }),
+  head: () => ({ meta: [{ title: "Access Key Gateway · e-Cagraray" }] }),
   component: Login,
 });
 
@@ -19,92 +19,142 @@ function Login() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.username || !form.password) return toast.error("All fields are required");
+    if (!form.username || !form.password) return toast.error("All security parameters are required");
     try {
       const u = await login(form.username, form.password, remember);
-      if (!u) return toast.error("Invalid username or password");
-      toast.success(`Welcome, ${u.fullName}`);
+      if (!u) return toast.error("Verification failed. Invalid credentials.");
+      toast.success(`Access Authorization Granted. Welcome, ${u.fullName}`);
       nav({ to: "/dashboard" });
     } catch (error: any) {
-      toast.error(error?.message ?? "Login failed. Please try again.");
+      toast.error(error?.message ?? "Authorization handshake failed.");
     }
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.11),_transparent_24%),#f8fbff] text-foreground">
-      <div className="grid min-h-screen grid-cols-1 overflow-hidden md:grid-cols-[1.2fr_0.95fr]">
-        <div className="relative hidden md:flex items-center bg-white/80 px-12 py-14 text-slate-900">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.1),transparent_24%)]" />
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-xl" />
-          <div className="relative z-10 flex h-full flex-col justify-between gap-12">
-            <Link to="/" className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm shadow-slate-900/5 transition hover:bg-white">
-              <Shield className="h-5 w-5" /> e-Cagraray
+    <div className="min-h-screen overflow-hidden bg-background text-foreground cyber-grid flex items-center justify-center p-4">
+      <div className="absolute top-10 left-10 h-72 w-72 rounded-full glow-orb-primary animate-float opacity-30 pointer-events-none" />
+      <div className="absolute bottom-10 right-10 h-96 w-96 rounded-full glow-orb-accent animate-float-reverse opacity-20 pointer-events-none" />
+      
+      <div className="relative w-full max-w-5xl rounded-[2.5rem] border border-border/50 bg-card/40 shadow-2xl backdrop-blur-xl overflow-hidden glass-premium">
+        <div className="grid md:grid-cols-[1.1fr_0.9fr]">
+          
+          {/* Left Security Column - Desktop Only */}
+          <div className="relative hidden md:flex flex-col justify-between p-12 bg-primary/[0.02] border-r border-border/40">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+            
+            <Link to="/" className="relative z-10 inline-flex items-center gap-3 self-start rounded-full border border-border/50 bg-background/50 px-4.5 py-2 text-xs font-bold uppercase tracking-wider transition hover:border-primary">
+              <Shield className="h-4.5 w-4.5 text-primary" /> e-Cagraray
             </Link>
-            <div className="max-w-xl space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-600 shadow-sm shadow-slate-900/5">
-                Official Barangay Portal
+
+            <div className="relative z-10 space-y-6 max-w-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/5 px-3.5 py-1 text-[9px] font-extrabold uppercase tracking-widest text-success">
+                <ShieldCheck className="h-3.5 w-3.5" /> SECURED ENDPOINT
               </div>
-              <div>
-                <h1 className="text-5xl font-bold leading-tight">A secure gateway for community operations.</h1>
-                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">Log in to manage residents, announcements, disasters, and barangay programs from one polished control center.</p>
-              </div>
-            </div>
-            <div className="space-y-3 rounded-[2rem] border border-slate-200/70 bg-white/85 p-6 text-sm text-slate-700 shadow-2xl shadow-slate-900/10">
-              <div className="font-semibold text-slate-900">Official Access Authorization</div>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                This is a secure system intended exclusively for authorized Barangay Cagraray officials, staff, and registered residents. Unauthorized access attempts are strictly monitored.
+              <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950 dark:text-white">
+                Authorized <br />
+                Operations Gateway.
+              </h1>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Authenticate with your system security key credentials to gain access to resident records, dispatch channels, and barangay logistics.
               </p>
-              <p className="text-xs text-slate-500">
-                For credential retrieval or account registration inquiries, please contact the Office of the Barangay Secretary.
+            </div>
+
+            <div className="relative z-10 space-y-3 rounded-2xl border border-border/40 bg-background/30 p-5 text-[11px] leading-relaxed text-muted-foreground backdrop-blur-md">
+              <div className="font-bold text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-primary" /> SECURE SESSION PROTOCOL
+              </div>
+              <p>
+                Session traffic is fully encrypted using industry-standard TLS protocols. Database actions are audited.
+              </p>
+              <p className="text-[10px] text-slate-400">
+                Unauthorized access attempts will trigger security logs and IP blocklists.
               </p>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center justify-center px-6 py-12 sm:px-10">
-          <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/95 p-8 shadow-[0_30px_80px_-28px_rgba(15,23,42,0.18)]">
-            <div className="pointer-events-none absolute -left-10 top-8 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
-            <div className="pointer-events-none absolute right-6 top-10 h-24 w-24 rounded-full bg-cyan-400/15 blur-3xl" />
-            <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-900">
-              <ArrowLeft className="h-4 w-4" /> Back to Home
-            </Link>
-            <div className="mt-6 space-y-3">
-              <h2 className="text-3xl font-bold tracking-tight">Sign in</h2>
-              <p className="text-sm text-slate-500">Use your barangay credentials to continue.</p>
+          {/* Right Verification Column */}
+          <div className="p-8 sm:p-12 flex flex-col justify-center">
+            <div className="md:hidden flex justify-between items-center mb-8">
+              <Link to="/" className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                <span className="font-extrabold text-sm tracking-tight">e-Cagraray</span>
+              </Link>
+              <Link to="/" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-primary">Cancel</Link>
+            </div>
+
+            <div className="space-y-2 mb-8">
+              <h2 className="text-3xl font-black tracking-tight">Verify Identity</h2>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">LGU PORTAL HANDSHAKE</p>
             </div>
 
             {forgot ? (
-              <div className="mt-8 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6 text-sm text-slate-700 shadow-sm shadow-slate-900/5">
-                <div className="font-semibold text-slate-900">Forgot Password</div>
-                <p className="mt-3 text-sm text-slate-600">Please contact the Barangay Secretary or Super Admin to reset your password.</p>
-                <button className="mt-5 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-95" onClick={() => setForgot(false)}>Back to login</button>
+              <div className="rounded-2xl border border-border bg-background/50 p-6 text-sm text-slate-700 dark:text-slate-300">
+                <div className="font-bold text-slate-950 dark:text-white uppercase tracking-wider text-xs">Credential Recovery</div>
+                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">Please consult your local Secretariat Desk or the Head Administrator node to reset password configurations.</p>
+                <button className="mt-6 w-full rounded-full bg-primary px-5 py-3 text-xs font-bold uppercase tracking-wider text-primary-foreground transition hover:opacity-95" onClick={() => setForgot(false)}>Back to Credentials</button>
               </div>
             ) : (
-              <form onSubmit={submit} className="mt-8 space-y-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Username</label>
-                  <input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10" placeholder="Enter your username" />
+              <form onSubmit={submit} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">System Username</label>
+                  <input
+                    value={form.username}
+                    onChange={(e) => setForm({ ...form, username: e.target.value })}
+                    className="w-full rounded-2xl border border-border/60 bg-background/40 px-4.5 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    placeholder="Enter official identifier"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Password</label>
+                
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Access Key Password</label>
                   <div className="relative">
-                    <input value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} type={show ? "text" : "password"} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10" placeholder="Enter your password" />
-                    <button type="button" onClick={() => setShow(!show)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-700">
-                      {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    <input
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      type={show ? "text" : "password"}
+                      className="w-full rounded-2xl border border-border/60 bg-background/40 px-4.5 py-3 pr-12 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
+                      placeholder="Enter security key"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShow(!show)}
+                      className="absolute right-4.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                    >
+                      {show ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                     </button>
                   </div>
                 </div>
-                <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-                  <label className="inline-flex items-center gap-2 text-slate-600"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" /> Remember me</label>
-                  <button type="button" onClick={() => setForgot(true)} className="text-primary hover:underline">Forgot password?</button>
+
+                <div className="flex items-center justify-between text-xs pt-1.5">
+                  <label className="inline-flex items-center gap-2 cursor-pointer select-none text-muted-foreground font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary/10"
+                    />
+                    Keep session keys
+                  </label>
+                  <button type="button" onClick={() => setForgot(true)} className="text-primary font-bold hover:underline">Forgot Key?</button>
                 </div>
-                <button type="submit" className="w-full rounded-3xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-95">Login</button>
-                <div className="text-center text-sm text-slate-500">
-                  Don&apos;t have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
+
+                <button type="submit" className="w-full rounded-full bg-primary py-3.5 text-xs font-bold uppercase tracking-wider text-primary-foreground transition hover:opacity-95 shadow-lg shadow-primary/20 cursor-pointer">
+                  Authenticate credentials
+                </button>
+
+                <div className="text-center text-xs text-muted-foreground pt-4">
+                  Need a secure local account? <Link to="/register" className="text-primary font-bold hover:underline">Request Registration</Link>
                 </div>
               </form>
             )}
+            
+            <div className="mt-8 flex justify-center">
+              <Link to="/" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition hover:text-foreground">
+                <ArrowLeft className="h-4 w-4" /> Cancel Handshake
+              </Link>
+            </div>
           </div>
+
         </div>
       </div>
     </div>

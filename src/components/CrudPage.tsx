@@ -78,30 +78,39 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
         action={canCreate ? <Button onClick={openNew}><Plus className="h-4 w-4" /> Add New</Button> : undefined}
       />
       <Card>
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm" />
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="relative flex-1 min-w-[240px] max-w-md">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search data nodes..."
+              className="w-full rounded-2xl border border-border/60 bg-background/50 py-3 pl-11 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+            />
           </div>
-          <div className="text-xs text-muted-foreground">{filtered.length} of {rows.length}</div>
+          <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground bg-muted/50 px-3.5 py-1.5 rounded-full border border-border/40">
+            {filtered.length} / {rows.length} Records
+          </div>
         </div>
         {filtered.length === 0 ? (
-          <EmptyState icon={Inbox} title={config.emptyTitle || "No records yet"} description={config.emptyDescription || "Start by adding the first one."} action={canCreate ? <Button onClick={openNew}><Plus className="h-4 w-4" /> Add New</Button> : undefined} />
+          <EmptyState icon={Inbox} title={config.emptyTitle || "No records yet"} description={config.emptyDescription || "Start by adding the first database node."} action={canCreate ? <Button onClick={openNew}><Plus className="h-4 w-4" /> Add New Node</Button> : undefined} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>{config.columns.map((c) => <th key={String(c.key)} className="py-2 pr-3 font-medium">{c.label}</th>)}<th /></tr>
+              <thead className="border-b border-border/50 text-left text-xs uppercase tracking-widest text-muted-foreground">
+                <tr>{config.columns.map((c) => <th key={String(c.key)} className="pb-3 pr-3 font-semibold">{c.label}</th>)}<th /></tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border/30">
                 {filtered.map((r) => (
-                  <tr key={r.id} className="border-b last:border-0 hover:bg-muted/40">
+                  <tr key={r.id} className="hover:bg-primary/[0.02] dark:hover:bg-primary/[0.04] transition-colors duration-150">
                     {config.columns.map((c) => (
-                      <td key={String(c.key)} className="py-3 pr-3">{c.render ? c.render(r) : String((r as any)[c.key] ?? "—")}</td>
+                      <td key={String(c.key)} className="py-4 pr-3 text-slate-800 dark:text-slate-250 font-medium">{c.render ? c.render(r) : String((r as any)[c.key] ?? "—")}</td>
                     ))}
-                    <td className="py-3 text-right">
-                      {canEdit && <button onClick={() => openEdit(r)} className="mr-1 rounded p-1.5 hover:bg-muted"><Pencil className="h-4 w-4" /></button>}
-                      {canDelete && <button onClick={() => remove(r)} className="rounded p-1.5 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>}
+                    <td className="py-4 text-right">
+                      <div className="inline-flex gap-1.5">
+                        {canEdit && <button onClick={() => openEdit(r)} className="rounded-full p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 transition"><Pencil className="h-4.5 w-4.5" /></button>}
+                        {canDelete && <button onClick={() => remove(r)} className="rounded-full p-2 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition"><Trash2 className="h-4.5 w-4.5" /></button>}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -111,20 +120,42 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
         )}
       </Card>
 
-      <Modal open={open} onClose={() => setOpen(false)} title={editing?.id ? `Edit ${config.title}` : `New ${config.title}`}>
-        <form onSubmit={save} className="space-y-3">
+      <Modal open={open} onClose={() => setOpen(false)} title={editing?.id ? `Update ${config.title}` : `New ${config.title}`}>
+        <form onSubmit={save} className="space-y-4">
           {config.fields.map((f) => {
             const val = (editing as any)?.[f.name] ?? "";
             const set = (v: any) => setEditing({ ...(editing as any), [f.name]: v });
             if (f.type === "textarea")
-              return <label key={f.name} className="block"><span className="mb-1 block text-sm font-medium">{f.label}{f.required && " *"}</span><textarea value={val} onChange={(e) => set(e.target.value)} rows={3} className="w-full rounded-lg border bg-background px-3 py-2 text-sm" /></label>;
+              return (
+                <label key={f.name} className="block space-y-1.5">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{f.label}{f.required && " *"}</span>
+                  <textarea
+                    value={val}
+                    onChange={(e) => set(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-2xl border border-border/60 bg-background/50 px-4.5 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-background/80"
+                  />
+                </label>
+              );
             if (f.type === "select")
-              return <label key={f.name} className="block"><span className="mb-1 block text-sm font-medium">{f.label}{f.required && " *"}</span><select value={val} onChange={(e) => set(e.target.value)} className="w-full rounded-lg border bg-background px-3 py-2 text-sm"><option value="">Select…</option>{f.options!.map((o) => <option key={o}>{o}</option>)}</select></label>;
+              return (
+                <label key={f.name} className="block space-y-1.5">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{f.label}{f.required && " *"}</span>
+                  <select
+                    value={val}
+                    onChange={(e) => set(e.target.value)}
+                    className="w-full rounded-2xl border border-border/60 bg-background/50 px-4.5 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-background/80"
+                  >
+                    <option value="">Select Option…</option>
+                    {f.options!.map((o) => <option key={o}>{o}</option>)}
+                  </select>
+                </label>
+              );
             return <Input key={f.name} label={`${f.label}${f.required ? " *" : ""}`} type={f.type || "text"} value={val} onChange={(e) => set(e.target.value)} />;
           })}
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">Commit Record</Button>
           </div>
         </form>
       </Modal>
