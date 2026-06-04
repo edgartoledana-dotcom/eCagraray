@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useStored } from "../lib/store";
 import { Card } from "../components/ui-kit";
 import { Users, Home, AlertTriangle, FileText, HeartHandshake, Calendar, Bell, Activity } from "lucide-react";
@@ -51,6 +51,48 @@ function Overview() {
     alerts: alerts.filter((a) => (a.createdAt || "").startsWith(m.key)).length,
   }));
   const eventPart = events.slice(-6).map((e) => ({ name: e.title?.slice(0, 12) || "Event", attendees: (e.attendees || []).length }));
+
+  const getRoleActions = () => {
+    switch (user?.role) {
+      case "super_admin":
+      case "captain":
+        return [
+          { to: "/dashboard/documents", label: "Approve Documents", desc: "Review and sign clearance & indigency requests.", color: "bg-blue-500/10 text-blue-600 border-blue-200/50" },
+          { to: "/dashboard/alerts", label: "Issue Disaster Alert", desc: "Send emergency weather warnings to residents.", color: "bg-red-500/10 text-red-600 border-red-200/50" },
+          { to: "/dashboard/incidents", label: "Review Incidents", desc: "Track road blockage, utilities, or safety reports.", color: "bg-yellow-500/10 text-yellow-600 border-yellow-200/50" },
+          { to: "/dashboard/reports", label: "Barangay Reports", desc: "Analyze budget, demographics, and operations.", color: "bg-purple-500/10 text-purple-600 border-purple-200/50" },
+        ];
+      case "secretary":
+        return [
+          { to: "/dashboard/residents", label: "Register Resident", desc: "Add demographic records for new citizens.", color: "bg-green-500/10 text-green-600 border-green-200/50" },
+          { to: "/dashboard/documents", label: "Process Documents", desc: "Draft clearances, certs, and indigency forms.", color: "bg-blue-500/10 text-blue-600 border-blue-200/50" },
+          { to: "/dashboard/announcements", label: "Announce News", desc: "Broadcast assemblies, missions, or notices.", color: "bg-cyan-500/10 text-cyan-600 border-cyan-200/50" },
+          { to: "/dashboard/households", label: "Manage Households", desc: "Map and group resident families by zone.", color: "bg-indigo-500/10 text-indigo-600 border-indigo-200/50" },
+        ];
+      case "sk_officer":
+        return [
+          { to: "/dashboard/events", label: "Schedule Sportsfest", desc: "Set location, rules, and details for events.", color: "bg-pink-500/10 text-pink-600 border-pink-200/50" },
+          { to: "/dashboard/youth", label: "SK Youth Registry", desc: "Access the complete demographic list of youth.", color: "bg-purple-500/10 text-purple-600 border-purple-200/50" },
+          { to: "/dashboard/volunteers", label: "Coordinate Volunteers", desc: "Recruit and assign young community assistants.", color: "bg-teal-500/10 text-teal-600 border-teal-200/50" },
+          { to: "/dashboard/surveys", label: "Youth Opinion Polls", desc: "Collect data on youth preferences and needs.", color: "bg-orange-500/10 text-orange-600 border-orange-200/50" },
+        ];
+      case "disaster":
+        return [
+          { to: "/dashboard/alerts", label: "Broadcast Disaster Alert", desc: "Post real-time critical weather warnings.", color: "bg-red-500/10 text-red-600 border-red-200/50" },
+          { to: "/dashboard/evacuation", label: "Evacuation Center Capacity", desc: "Monitor center logistics and occupants count.", color: "bg-amber-500/10 text-amber-600 border-amber-200/50" },
+          { to: "/dashboard/volunteers", label: "Deploy First-Aid Teams", desc: "Dispatch response units to active zones.", color: "bg-emerald-500/10 text-emerald-600 border-emerald-200/50" },
+          { to: "/dashboard/emergency", label: "Update Hotlines", desc: "Ensure citizens can reach MDRRMO, Police, and BFP.", color: "bg-rose-500/10 text-rose-600 border-rose-200/50" },
+        ];
+      case "resident":
+      default:
+        return [
+          { to: "/dashboard/documents", label: "Request Certificate", desc: "Submit application for job or travel clearance.", color: "bg-blue-500/10 text-blue-600 border-blue-200/50" },
+          { to: "/dashboard/incidents", label: "Report Incident", desc: "Report fallen trees, busted pipes, or utilities.", color: "bg-yellow-500/10 text-yellow-600 border-yellow-200/50" },
+          { to: "/dashboard/complaints", label: "File Citizen Complaint", desc: "Submit noise or illegal dumping complaints formally.", color: "bg-orange-500/10 text-orange-600 border-orange-200/50" },
+          { to: "/dashboard/surveys", label: "Participate in Polls", desc: "Give feedback on solid waste management schedule.", color: "bg-green-500/10 text-green-600 border-green-200/50" },
+        ];
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -118,6 +160,22 @@ function Overview() {
           )}
         </Card>
       </div>
+
+      <Card className="p-6">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Your Role-Based Quick Actions</h2>
+        <p className="text-xs text-muted-foreground mb-4">Perform actions and access features authorized for your role.</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {getRoleActions().map((act) => (
+            <Link key={act.label} to={act.to} className={`flex flex-col justify-between p-5 rounded-2xl border transition duration-200 hover:-translate-y-1 hover:shadow-lg ${act.color}`}>
+              <div>
+                <div className="font-semibold text-sm leading-snug">{act.label}</div>
+                <div className="mt-1.5 text-xs opacity-85 leading-relaxed">{act.desc}</div>
+              </div>
+              <div className="mt-5 text-xs font-bold uppercase tracking-wider text-right">Open Panel ➔</div>
+            </Link>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }

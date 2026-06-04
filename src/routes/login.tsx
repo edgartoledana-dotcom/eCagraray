@@ -42,7 +42,7 @@ function Login() {
             </Link>
             <div className="max-w-xl space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-600 shadow-sm shadow-slate-900/5">
-                Ready access for barangay roles
+                Official Barangay Portal
               </div>
               <div>
                 <h1 className="text-5xl font-bold leading-tight">A secure gateway for community operations.</h1>
@@ -50,12 +50,13 @@ function Login() {
               </div>
             </div>
             <div className="space-y-3 rounded-[2rem] border border-slate-200/70 bg-white/85 p-6 text-sm text-slate-700 shadow-2xl shadow-slate-900/10">
-              <div className="font-semibold text-slate-900">Role-based access ready</div>
-              <div className="grid gap-2 text-sm text-slate-600">
-                <span>admin / admin123</span>
-                <span>captain / captain123</span>
-                <span>resident / resident123</span>
-              </div>
+              <div className="font-semibold text-slate-900">Official Access Authorization</div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                This is a secure system intended exclusively for authorized Barangay Cagraray officials, staff, and registered residents. Unauthorized access attempts are strictly monitored.
+              </p>
+              <p className="text-xs text-slate-500">
+                For credential retrieval or account registration inquiries, please contact the Office of the Barangay Secretary.
+              </p>
             </div>
           </div>
         </div>
@@ -69,7 +70,7 @@ function Login() {
             </Link>
             <div className="mt-6 space-y-3">
               <h2 className="text-3xl font-bold tracking-tight">Sign in</h2>
-              <p className="text-sm text-slate-500">Use your barangay account to continue.</p>
+              <p className="text-sm text-slate-500">Use your barangay credentials to continue.</p>
             </div>
 
             {forgot ? (
@@ -82,12 +83,12 @@ function Login() {
               <form onSubmit={submit} className="mt-8 space-y-5">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">Username</label>
-                  <input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10" placeholder="admin" />
+                  <input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10" placeholder="Enter your username" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">Password</label>
                   <div className="relative">
-                    <input value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} type={show ? "text" : "password"} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10" placeholder="••••••••" />
+                    <input value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} type={show ? "text" : "password"} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10" placeholder="Enter your password" />
                     <button type="button" onClick={() => setShow(!show)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-700">
                       {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
