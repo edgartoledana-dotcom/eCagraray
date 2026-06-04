@@ -1,0 +1,71 @@
+{
+  "users": [
+    {
+      "id": "9a3m1nhp7ssl",
+      "username": "admin",
+      "fullName": "System Administrator",
+      "email": "admin@ecagraray.gov.ph",
+      "role": "super_admin",
+      "createdAt": "2026-06-04T07:53:25.893Z",
+      "passwordHash": "5a68a2a77d9b96d2b829f121ee4f6c0c:d6434dcae8258d441f1ad0fea237521d5f9df815f345dfe638b22ee4ba406a1acbd84322dd5e2cc486701104856b68269d5051fef6e0aa94709bc13161173c9e"
+    },
+    {
+      "id": "84tg8pgr7ssl",
+      "username": "captain",
+      "fullName": "Barangay Captain",
+      "email": "captain@ecagraray.gov.ph",
+      "role": "captain",
+      "createdAt": "2026-06-04T07:53:25.893Z",
+      "passwordHash": "d959bfa0e720d4baaf5770bfeeeef993:927d4323feaa2779c14ba8814489d1d74ca7f8247d861e6b65ba6c91a5441af8ac8f7fbd700cd935038db55b36c64fa15f0277b0d42deb1667a3746d8fc6d0ed"
+    },
+    {
+      "id": "ieqcqa9w7ssl",
+      "username": "secretary",
+      "fullName": "Barangay Secretary",
+      "email": "secretary@ecagraray.gov.ph",
+      "role": "secretary",
+      "createdAt": "2026-06-04T07:53:25.893Z",
+      "passwordHash": "a7e30fea2289bed60a4e6fe3ea70c3f1:e363162d3cdb7d489a5752bd3bdad071ab69749d93ef359cdefb5e1de7c0fad55afce8af0ea1e92b78c8e7e40ef2739f9270bb99b803303af289259b449fb694"
+    },
+    {
+      "id": "9yg3jtv87ssl",
+      "username": "skofficer",
+      "fullName": "SK Officer",
+      "email": "skofficer@ecagraray.gov.ph",
+      "role": "sk_officer",
+      "createdAt": "2026-06-04T07:53:25.893Z",
+      "passwordHash": "e92ca73a797847c1fbb5163f814054f3:02bd8f3d9fc13607ef1402e491ff2bb6df371d739478fa369926eaf40ccfd21bccee59bb830ee907350a5111eda4d76e35741b86c52859d6c7db00a23b25e52a"
+    },
+    {
+      "id": "lbatumm17ssl",
+      "username": "disaster",
+      "fullName": "Disaster Response Officer",
+      "email": "disaster@ecagraray.gov.ph",
+      "role": "disaster",
+      "createdAt": "2026-06-04T07:53:25.893Z",
+      "passwordHash": "b3c509d67b761eef33263793a250be5f:70854dd38fdc6553ec54f5160c0ca26c1755ee0dbf5a8d86ea28a5bf410bf36243b90fe1ac731699c5370ea5bea679e578d52d3cd0e2e9881654a95c1977f071"
+    },
+    {
+      "id": "zzur81ov7ssl",
+      "username": "resident",
+      "fullName": "Edgar Toledana",
+      "email": "resident@ecagraray.gov.ph",
+      "role": "resident",
+      "createdAt": "2026-06-04T07:53:25.893Z",
+      "passwordHash": "585180ddfe25ef398285b932c35de774:04a23cbfff02c8163b742b2ece065634bcb539f3f4b65918770c2d6b870abfa9431973c12465971f0084bbc60152d2e903c5830608ea3e117721a235b4a21099"
+    }
+  ],
+  "barangay": {
+    "name": "Barangay Cagraray",
+    "municipality": "Bato",
+    "province": "Catanduanes",
+    "address": "Cagraray, Bato, Catanduanes",
+    "contact": "+63 977 008 6455",
+    "email": "info@ecagraray.gov.ph",
+    "captain": ""
+  },
+  "residents": [],
+  "households": [],
+  "volunteers": [],
+  "events": []
+}

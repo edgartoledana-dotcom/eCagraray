@@ -1,0 +1,1 @@
+import{x as e,s as o,z as n}from"./index-BP6y-M5p.js";function c(t){const i=e("notifications",[]),s={...t,id:o(),read:!1,createdAt:new Date().toISOString()};n("notifications",[s,...i].slice(0,200))}export{c as p};
