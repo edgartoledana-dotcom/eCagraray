@@ -108,10 +108,10 @@ export function Select({ label, children, className = "", ...rest }: { label?: s
 export function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm transition-opacity duration-300" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm transition-opacity duration-300" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-3xl border border-border/50 bg-card/90 p-8 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 dark:bg-card/95"
+        className="relative my-auto w-full max-w-lg rounded-3xl border border-border/50 bg-card/90 p-8 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 dark:bg-card/95"
       >
         <div className="mb-6 flex items-center justify-between">
           <h3 className="text-xl font-bold tracking-tight">{title}</h3>
