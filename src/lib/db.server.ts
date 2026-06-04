@@ -68,7 +68,12 @@ async function writeToFilesystem(database: DatabaseSchema) {
 }
 
 async function tryD1() {
-  if (process.env.DEPLOY_TARGET !== "cloudflare") return null;
+  const isCloudflare =
+    process.env.DEPLOY_TARGET === "cloudflare" ||
+    typeof (globalThis as any).D1Database !== "undefined";
+
+  if (!isCloudflare) return null;
+
   try {
     const d1 = await import("./db-d1.server");
     return d1;
