@@ -12,6 +12,8 @@ interface RegisterPayload {
   birthdate?: string;
   gender?: string;
   role?: User["role"];
+  occupation?: string;
+  isPwd?: string;
 }
 
 interface AuthState {
@@ -40,6 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const normalizedPassword = password.trim();
     const found = await loginUser({ data: { username: normalizedUsername, password: normalizedPassword } });
     if (found) {
+      if (found.approved === false) {
+        throw new Error("Account pending LGU verification. An email activation link will be dispatched once reviewed by the Secretariat desk.");
+      }
       (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, found.id);
       if (!remember) localStorage.removeItem(SESSION_KEY);
       setUser(found);

@@ -1,25 +1,57 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStored, uid } from "../lib/store";
 import { Button, Card, EmptyState, Input, Modal, PageHeader, Badge } from "../components/ui-kit";
 import { Building, Plus, Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "../lib/auth";
 import { toast } from "sonner";
+import { getTableData, saveTableData } from "../lib/api/auth.functions";
 
 export const Route = createFileRoute("/dashboard/evacuation")({ component: Page });
 
 interface C { id: string; name: string; location: string; capacity: number; occupants: number; manager: string; createdAt: string }
 
 function Page() {
+  const { user } = useAuth();
   const [items, setItems] = useStored<C[]>("evac_centers", []);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<C | null>(null);
+
+  useEffect(() => {
+    getTableData({ data: { table: "evac_centers" } })
+      .then((serverData) => {
+        if (serverData && Array.isArray(serverData)) {
+          setItems(serverData as C[]);
+        }
+      })
+      .catch((err) => console.warn("Could not sync load evac_centers:", err));
+  }, []);
+
+  const updateItemsAndSync = async (nextItems: C[]) => {
+    setItems(nextItems);
+    try {
+      await saveTableData({ data: { table: "evac_centers", data: nextItems } });
+    } catch (err) {
+      console.error("Could not sync evac_centers on server:", err);
+    }
+  };
+
+
+  if (!user || (user.role !== "super_admin" && user.role !== "disaster" && user.role !== "captain")) {
+    return (
+      <Card>
+        <EmptyState title="Access Restricted" description="Only System Administrator, Disaster Response, and Barangay Captain accounts possess Evacuation Centers clearance." />
+      </Card>
+    );
+  }
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing || !editing.name) return toast.error("Name required");
     const isNew = !editing.id;
     const p = isNew ? { ...editing, id: uid(), createdAt: new Date().toISOString() } : editing;
-    setItems(isNew ? [p, ...items] : items.map((x) => x.id === p.id ? p : x));
+    const nextItems = isNew ? [p, ...items] : items.map((x) => x.id === p.id ? p : x);
+    void updateItemsAndSync(nextItems);
     setOpen(false); toast.success("Saved");
   };
 
@@ -55,7 +87,7 @@ function Page() {
                 <div className="mt-3 text-xs text-muted-foreground">Manager: {c.manager || "—"}</div>
                 <div className="mt-3 flex gap-1">
                   <button onClick={() => { setEditing(c); setOpen(true); }} className="rounded p-1.5 hover:bg-muted"><Pencil className="h-4 w-4" /></button>
-                  <button onClick={() => { if (confirm("Delete?")) setItems(items.filter((x) => x.id !== c.id)); }} className="rounded p-1.5 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
+                  <button onClick={() => { if (confirm("Delete?")) updateItemsAndSync(items.filter((x) => x.id !== c.id)); }} className="rounded p-1.5 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
                 </div>
               </Card>
             );

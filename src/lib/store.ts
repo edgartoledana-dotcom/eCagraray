@@ -92,6 +92,7 @@ export const ROLE_PERMISSIONS = {
   userManagement: ["super_admin"] as Role[],
   residentsManage: ["super_admin","secretary"] as Role[],
   householdsManage: ["super_admin","secretary"] as Role[],
+  officialsManage: ["super_admin"] as Role[],
 } as const;
 
 export type PermissionKey = keyof typeof ROLE_PERMISSIONS;
@@ -117,5 +118,8 @@ export interface User {
   birthdate?: string;
   gender?: string;
   role: Role;
+  approved?: boolean;
+  occupation?: string;
+  isPwd?: string;
   createdAt: string;
 }

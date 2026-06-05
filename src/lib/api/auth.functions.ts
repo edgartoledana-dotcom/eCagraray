@@ -20,11 +20,13 @@ export const registerUser = createServerFn({ method: "POST" })
       birthdate: z.string().optional(),
       gender: z.string().optional(),
       role: z.string().optional(),
+      occupation: z.string().optional(),
+      isPwd: z.string().optional(),
     }),
   )
   .handler(async ({ data }) => {
     const { createUser } = await import("../auth.server");
-    return createUser(data);
+    return createUser(data as any);
   });
 
 export const fetchUserById = createServerFn({ method: "POST" })
@@ -52,11 +54,13 @@ export const createUser = createServerFn({ method: "POST" })
       address: z.string().optional(),
       birthdate: z.string().optional(),
       gender: z.string().optional(),
+      occupation: z.string().optional(),
+      isPwd: z.string().optional(),
     }),
   )
   .handler(async ({ data }) => {
     const { createUser: createServerUser } = await import("../auth.server");
-    return createServerUser(data);
+    return createServerUser(data as any);
   });
 
 export const updateUser = createServerFn({ method: "POST" })
@@ -71,12 +75,15 @@ export const updateUser = createServerFn({ method: "POST" })
       address: z.string().optional(),
       birthdate: z.string().optional(),
       gender: z.string().optional(),
-      password: z.string().min(8).optional(),
+      password: z.string().min(8).or(z.literal("")).optional(),
+      approved: z.boolean().optional(),
+      occupation: z.string().optional(),
+      isPwd: z.string().optional(),
     }),
   )
   .handler(async ({ data }) => {
     const { updateUser: updateServerUser } = await import("../auth.server");
-    return updateServerUser(data);
+    return updateServerUser(data as any);
   });
 
 export const deleteUser = createServerFn({ method: "POST" })
@@ -113,6 +120,28 @@ export const getDashboardStats = createServerFn({ method: "POST" })
     return getStats();
   });
 
+export const submitContactInquiry = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      name: z.string().min(1),
+      email: z.string().email(),
+      message: z.string().min(1),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const { readTableData, writeTableData } = await import("../auth.server");
+    const existing = (await readTableData("inquiries")) || [];
+    const newInquiry = {
+      id: Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4),
+      name: data.name,
+      email: data.email,
+      message: data.message,
+      createdAt: new Date().toISOString(),
+    };
+    await writeTableData("inquiries", [newInquiry, ...existing]);
+    return { success: true };
+  });
+
 export const updateUserProfile = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
@@ -128,4 +157,18 @@ export const updateUserProfile = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { updateUserProfile } = await import("../auth.server");
     return updateUserProfile(data);
+  });
+
+export const getTableData = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ table: z.string() }))
+  .handler(async ({ data }) => {
+    const { readTableData } = await import("../auth.server");
+    return readTableData(data.table);
+  });
+
+export const saveTableData = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ table: z.string(), data: z.array(z.any()) }))
+  .handler(async ({ data }) => {
+    const { writeTableData } = await import("../auth.server");
+    return writeTableData(data.table, data.data);
   });

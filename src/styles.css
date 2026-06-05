@@ -110,6 +110,9 @@
 }
 
 @layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
   * {
     border-color: var(--color-border);
   }
@@ -187,6 +190,28 @@
     50% { opacity: 0.8; }
   }
 
+  @keyframes glow-pulse {
+    0%, 100% {
+      border-color: oklch(0.38 0.13 255 / 0.1);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.02);
+    }
+    50% {
+      border-color: oklch(0.38 0.13 255 / 0.25);
+      box-shadow: 0 8px 32px 0 oklch(0.38 0.13 255 / 0.06);
+    }
+  }
+
+  @keyframes slide-in-bottom {
+    0% {
+      transform: translateY(12px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
   .animate-float {
     animation: float 12s ease-in-out infinite;
   }
@@ -199,6 +224,57 @@
     animation: pulse-slow 8s ease-in-out infinite;
   }
 
+  .glow-pulse {
+    animation: glow-pulse 3s infinite ease-in-out;
+  }
+
+  .animate-slide-in {
+    opacity: 0;
+    animation: slide-in-bottom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .hover-card-premium {
+    position: relative;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease,
+                border-color 0.3s ease;
+  }
+
+  .hover-card-premium:hover {
+    transform: translateY(-4px) scale(1.008);
+    box-shadow: 0 16px 30px -10px oklch(0.38 0.13 255 / 0.08), 
+                0 0 12px 1px oklch(0.38 0.13 255 / 0.04);
+    border-color: oklch(0.38 0.13 255 / 0.3);
+  }
+
+  /* Shimmer gradient border effect only on hover */
+  .hover-card-premium::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(135deg, transparent, transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  .hover-card-premium:hover::before {
+    background: linear-gradient(135deg, oklch(0.38 0.13 255 / 0.55), oklch(0.78 0.14 80 / 0.45));
+    opacity: 1;
+  }
+
+  /* Stagger delays */
+  .delay-75 { animation-delay: 75ms; }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+
   /* Frosted Glass-Premium */
   .glass-premium {
     background: rgba(255, 255, 255, 0.45);
@@ -206,6 +282,11 @@
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05),
                 inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform, filter;
+    transition: none !important;
   }
 
   .dark .glass-premium {
@@ -214,6 +295,11 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3),
                 inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform, filter;
+    transition: none !important;
   }
 
   /* High Quality Hover Glows */
@@ -282,9 +368,219 @@
   ::-webkit-scrollbar-thumb:hover {
     background: oklch(0.55 0.13 255 / 0.3);
   }
+
+  /* Sliding Auth Console Panel */
+  .auth-slider-container {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  .auth-slider {
+    display: flex;
+    width: 200%;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .auth-form-panel {
+    width: 50%;
+    flex-shrink: 0;
+  }
+
+  .auth-fields-scroll {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.55 0.13 255 / 0.2) transparent;
+    overscroll-behavior: contain;
+    padding-right: 6px;
+  }
+  
+  .auth-fields-scroll::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+  .auth-fields-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .auth-fields-scroll::-webkit-scrollbar-thumb {
+    background: oklch(0.55 0.13 255 / 0.2);
+    border-radius: 99px;
+  }
+  
+  .auth-fields-scroll::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.55 0.13 255 / 0.4);
+  }
+
+  .auth-card-static {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    will-change: auto !important;
+  }
+
+  .tech-corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: oklch(0.55 0.13 255 / 0.3);
+    pointer-events: none;
+  }
+  
+  .tech-corner-tl {
+    top: 16px;
+    left: 16px;
+    border-top: 1.5px solid;
+    border-left: 1.5px solid;
+  }
+  
+  .tech-corner-tr {
+    top: 16px;
+    right: 16px;
+    border-top: 1.5px solid;
+    border-right: 1.5px solid;
+  }
+  
+  .tech-corner-bl {
+    bottom: 16px;
+    left: 16px;
+    border-bottom: 1.5px solid;
+    border-left: 1.5px solid;
+  }
+  
+  .tech-corner-br {
+    bottom: 16px;
+    right: 16px;
+    border-bottom: 1.5px solid;
+    border-right: 1.5px solid;
+  }
+
+  .tech-terminal {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid oklch(0.55 0.13 255 / 0.1);
+    border-radius: 12px;
+    padding: 10px;
+    color: oklch(0.65 0.13 230);
+  }
 }
 
 @media print {
   .no-print { display: none !important; }
   body { background: white !important; color: black !important; }
+}
+
+/* =============================================
+   MOBILE PERFORMANCE OPTIMIZATIONS (< 1024px)
+   Disables heavy GPU-taxing effects for smooth
+   60fps+ scrolling on smartphones and tablets
+   ============================================= */
+@media (max-width: 1024px) {
+  /* Enable smooth momentum scroll globally on mobile */
+  html, body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Disable hardware-taxing backdrop filters to ensure 60fps scrolling */
+  .glass-panel,
+  .glass-panel-dark,
+  .glass-premium,
+  .dark .glass-premium,
+  .section-soft {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .glass-panel {
+    background-color: var(--color-card) !important;
+  }
+  .glass-panel-dark {
+    background-color: oklch(0.18 0.03 255) !important;
+  }
+  .glass-premium {
+    background-color: var(--color-card) !important;
+    border-color: var(--color-border) !important;
+  }
+  .dark .glass-premium {
+    background-color: oklch(0.18 0.03 255) !important;
+    border-color: var(--color-border) !important;
+  }
+  .section-soft {
+    background-color: var(--color-card) !important;
+  }
+
+  /* Disable expensive floating background and orb animations to save battery */
+  .animate-float,
+  .animate-float-reverse,
+  .animate-pulse-slow,
+  .glow-pulse {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Remove transform transitions on hover-card-premium for mobile/tablet */
+  .hover-card-premium:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  .hover-card-premium::before {
+    display: none !important;
+  }
+
+  /* Reduce complex shadows for better compositing */
+  .shadow-2xl, .shadow-xl {
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* Disable glow text shadows on mobile (performance) */
+  .glow-text-primary, .glow-text-accent {
+    text-shadow: none !important;
+  }
+  
+  /* Disable grid background on mobile - paints less pixels */
+  .cyber-grid {
+    background-image: none !important;
+  }
+  
+  /* Ensure all backdrop blurs removed from main layout panels */
+  .backdrop-blur-md,
+  .backdrop-blur-xl,
+  .backdrop-blur-sm,
+  .backdrop-blur-xs {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Larger touch targets for interactive elements */
+  button, a[role="button"], .cursor-pointer {
+    min-height: 40px;
+  }
+  
+  /* Smooth page-level scroll inside dashboard */
+  main {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* =============================================
+   EXTRA MOBILE SMALL SCREENS (< 480px)
+   Additional layout fixes for very small phones
+   ============================================= */
+@media (max-width: 480px) {
+  /* Card padding tighter on small phones */
+  .rounded-2xl.p-6 {
+    padding: 1rem !important;
+  }
+  
+  /* Make stat cards full-width on tiny screens */
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  /* Ensure page headers don't overflow */
+  h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+  }
 }

@@ -2,12 +2,12 @@
   "users": [
     {
       "id": "9a3m1nhp7ssl",
-      "username": "admin",
+      "username": "systemadmin",
       "fullName": "System Administrator",
       "email": "admin@ecagraray.gov.ph",
       "role": "super_admin",
       "createdAt": "2026-06-04T07:53:25.893Z",
-      "passwordHash": "5a68a2a77d9b96d2b829f121ee4f6c0c:d6434dcae8258d441f1ad0fea237521d5f9df815f345dfe638b22ee4ba406a1acbd84322dd5e2cc486701104856b68269d5051fef6e0aa94709bc13161173c9e"
+      "passwordHash": "861b9b5f3c01e5de8e82a70db19d6129:c58e842cf97a5f8f0fd408f9c84cdcaf35dc187edb1b5b9e8e04bee0d0f8c9883ca13d82118330195f2180fd05dd2b3e0b76a9d2e2f08cbbe3854f643b8fa559"
     },
     {
       "id": "84tg8pgr7ssl",
@@ -52,7 +52,10 @@
       "email": "resident@ecagraray.gov.ph",
       "role": "resident",
       "createdAt": "2026-06-04T07:53:25.893Z",
-      "passwordHash": "585180ddfe25ef398285b932c35de774:04a23cbfff02c8163b742b2ece065634bcb539f3f4b65918770c2d6b870abfa9431973c12465971f0084bbc60152d2e903c5830608ea3e117721a235b4a21099"
+      "passwordHash": "585180ddfe25ef398285b932c35de774:04a23cbfff02c8163b742b2ece065634bcb539f3f4b65918770c2d6b870abfa9431973c12465971f0084bbc60152d2e903c5830608ea3e117721a235b4a21099",
+      "approved": true,
+      "occupation": "Student",
+      "isPwd": "No"
     }
   ],
   "barangay": {
@@ -61,11 +64,510 @@
     "province": "Catanduanes",
     "address": "Cagraray, Bato, Catanduanes",
     "contact": "+63 977 008 6455",
-    "email": "info@ecagraray.gov.ph",
-    "captain": ""
+    "email": "ecagraraymanagementsystem@gmail.com",
+    "captain": "Joseph D. Torrepalma"
   },
-  "residents": [],
-  "households": [],
-  "volunteers": [],
-  "events": []
+  "residents": [
+    {
+      "id": "res_001",
+      "fullName": "Maria Santos",
+      "birthdate": "1988-03-15",
+      "gender": "Female",
+      "civilStatus": "Married",
+      "contact": "+63 912 345 6789",
+      "address": "Purok 1, Cagraray",
+      "household": "HH-001",
+      "occupation": "Farmer",
+      "isPwd": false
+    },
+    {
+      "id": "res_002",
+      "fullName": "Juan Dela Cruz",
+      "birthdate": "1975-11-22",
+      "gender": "Male",
+      "civilStatus": "Married",
+      "contact": "+63 923 456 7890",
+      "address": "Purok 2, Cagraray",
+      "household": "HH-002",
+      "occupation": "Fisherfolk",
+      "isPwd": false
+    },
+    {
+      "id": "res_003",
+      "fullName": "Elen Ribera",
+      "birthdate": "1992-07-08",
+      "gender": "Female",
+      "civilStatus": "Single",
+      "contact": "+63 934 567 8901",
+      "address": "Purok 3, Cagraray",
+      "household": "HH-003",
+      "occupation": "Student",
+      "isPwd": false
+    },
+    {
+      "id": "res_004",
+      "fullName": "Pedro Bautista",
+      "birthdate": "1965-01-30",
+      "gender": "Male",
+      "civilStatus": "Widowed",
+      "contact": "+63 945 678 9012",
+      "address": "Purok 1, Cagraray",
+      "household": "HH-004",
+      "occupation": "Farmer",
+      "isPwd": true
+    },
+    {
+      "id": "res_005",
+      "fullName": "Ana Gonzales",
+      "birthdate": "1995-09-12",
+      "gender": "Female",
+      "civilStatus": "Single",
+      "contact": "+63 956 789 0123",
+      "address": "Purok 2, Cagraray",
+      "household": "HH-005",
+      "occupation": "Student",
+      "isPwd": false
+    },
+    {
+      "id": "res_006",
+      "fullName": "Ramon Villanueva",
+      "birthdate": "1982-06-18",
+      "gender": "Male",
+      "civilStatus": "Married",
+      "contact": "+63 967 890 1234",
+      "address": "Purok 3, Cagraray",
+      "household": "HH-006",
+      "occupation": "Fisherfolk",
+      "isPwd": false
+    },
+    {
+      "id": "res_007",
+      "fullName": "Luzviminda Ortega",
+      "birthdate": "1970-12-25",
+      "gender": "Female",
+      "civilStatus": "Married",
+      "contact": "+63 978 901 2345",
+      "address": "Purok 1, Cagraray",
+      "household": "HH-007",
+      "occupation": "Farmer",
+      "isPwd": false
+    },
+    {
+      "id": "res_008",
+      "fullName": "Ricardo Mendoza",
+      "birthdate": "1998-04-05",
+      "gender": "Male",
+      "civilStatus": "Single",
+      "contact": "+63 989 012 3456",
+      "address": "Purok 2, Cagraray",
+      "household": "HH-008",
+      "occupation": "Student",
+      "isPwd": false
+    },
+    {
+      "id": "res_009",
+      "fullName": "Teresa Almendras",
+      "birthdate": "1960-08-14",
+      "gender": "Female",
+      "civilStatus": "Widowed",
+      "contact": "+63 900 123 4567",
+      "address": "Purok 3, Cagraray",
+      "household": "HH-003",
+      "occupation": "Other",
+      "isPwd": true
+    },
+    {
+      "id": "res_010",
+      "fullName": "Felipe Salvacion",
+      "birthdate": "1985-02-28",
+      "gender": "Male",
+      "civilStatus": "Married",
+      "contact": "+63 911 234 5678",
+      "address": "Purok 1, Cagraray",
+      "household": "HH-010",
+      "occupation": "Fisherfolk",
+      "isPwd": false
+    },
+    {
+      "id": "res_011",
+      "fullName": "Cecilia Lopez",
+      "birthdate": "1991-10-10",
+      "gender": "Female",
+      "civilStatus": "Married",
+      "contact": "+63 922 345 6789",
+      "address": "Purok 2, Cagraray",
+      "household": "HH-005",
+      "occupation": "Other",
+      "isPwd": false
+    },
+    {
+      "id": "res_012",
+      "fullName": "Benigno Aquino Jr.",
+      "birthdate": "1978-07-19",
+      "gender": "Male",
+      "civilStatus": "Married",
+      "contact": "+63 933 456 7890",
+      "address": "Purok 3, Cagraray",
+      "household": "HH-012",
+      "occupation": "Farmer",
+      "isPwd": false
+    },
+    {
+      "id": "res_013",
+      "fullName": "Gloria Macaraeg",
+      "birthdate": "2001-01-05",
+      "gender": "Female",
+      "civilStatus": "Single",
+      "contact": "+63 944 567 8901",
+      "address": "Purok 1, Cagraray",
+      "household": "HH-001",
+      "occupation": "Student",
+      "isPwd": false
+    },
+    {
+      "id": "res_014",
+      "fullName": "Rodrigo Cabrera",
+      "birthdate": "1968-11-30",
+      "gender": "Male",
+      "civilStatus": "Married",
+      "contact": "+63 955 678 9012",
+      "address": "Purok 2, Cagraray",
+      "household": "HH-014",
+      "occupation": "Farmer",
+      "isPwd": false
+    },
+    {
+      "id": "res_015",
+      "fullName": "Nena Rosario",
+      "birthdate": "1993-04-22",
+      "gender": "Female",
+      "civilStatus": "Single",
+      "contact": "+63 966 789 0123",
+      "address": "Purok 3, Cagraray",
+      "household": "HH-015",
+      "occupation": "Student",
+      "isPwd": false
+    },
+    {
+      "id": "res_016",
+      "fullName": "Rudy Fernandez",
+      "birthdate": "1972-09-09",
+      "gender": "Male",
+      "civilStatus": "Married",
+      "contact": "+63 977 890 1234",
+      "address": "Purok 1, Cagraray",
+      "household": "HH-016",
+      "occupation": "Fisherfolk",
+      "isPwd": false
+    },
+    {
+      "id": "res_017",
+      "fullName": "Mila Cruz",
+      "birthdate": "1986-05-17",
+      "gender": "Female",
+      "civilStatus": "Single",
+      "contact": "+63 988 901 2345",
+      "address": "Purok 2, Cagraray",
+      "household": "HH-017",
+      "occupation": "Other",
+      "isPwd": false
+    },
+    {
+      "id": "res_018",
+      "fullName": "Alberto Reyes",
+      "birthdate": "1955-02-14",
+      "gender": "Male",
+      "civilStatus": "Widowed",
+      "contact": "+63 999 012 3456",
+      "address": "Purok 3, Cagraray",
+      "household": "HH-006",
+      "occupation": "Farmer",
+      "isPwd": true
+    },
+    {
+      "id": "res_019",
+      "fullName": "Lorna Salazar",
+      "birthdate": "1997-08-25",
+      "gender": "Female",
+      "civilStatus": "Single",
+      "contact": "+63 910 123 4567",
+      "address": "Purok 1, Cagraray",
+      "household": "HH-019",
+      "occupation": "Student",
+      "isPwd": false
+    },
+    {
+      "id": "res_020",
+      "fullName": "Mario Hernandez",
+      "birthdate": "1980-12-03",
+      "gender": "Male",
+      "civilStatus": "Married",
+      "contact": "+63 921 234 5678",
+      "address": "Purok 2, Cagraray",
+      "household": "HH-020",
+      "occupation": "Fisherfolk",
+      "isPwd": false
+    }
+  ],
+  "households": [
+    {
+      "id": "hh_001",
+      "code": "HH-001",
+      "head": "Maria Santos",
+      "address": "Purok 1, Cagraray",
+      "members": 3,
+      "purok": "Purok 1"
+    },
+    {
+      "id": "hh_002",
+      "code": "HH-002",
+      "head": "Juan Dela Cruz",
+      "address": "Purok 2, Cagraray",
+      "members": 5,
+      "purok": "Purok 2"
+    },
+    {
+      "id": "hh_003",
+      "code": "HH-003",
+      "head": "Elen Ribera",
+      "address": "Purok 3, Cagraray",
+      "members": 4,
+      "purok": "Purok 3"
+    },
+    {
+      "id": "hh_004",
+      "code": "HH-004",
+      "head": "Pedro Bautista",
+      "address": "Purok 1, Cagraray",
+      "members": 2,
+      "purok": "Purok 1"
+    },
+    {
+      "id": "hh_005",
+      "code": "HH-005",
+      "head": "Ana Gonzales",
+      "address": "Purok 2, Cagraray",
+      "members": 4,
+      "purok": "Purok 2"
+    },
+    {
+      "id": "hh_006",
+      "code": "HH-006",
+      "head": "Ramon Villanueva",
+      "address": "Purok 3, Cagraray",
+      "members": 6,
+      "purok": "Purok 3"
+    },
+    {
+      "id": "hh_007",
+      "code": "HH-007",
+      "head": "Luzviminda Ortega",
+      "address": "Purok 1, Cagraray",
+      "members": 3,
+      "purok": "Purok 1"
+    },
+    {
+      "id": "hh_008",
+      "code": "HH-008",
+      "head": "Ricardo Mendoza",
+      "address": "Purok 2, Cagraray",
+      "members": 2,
+      "purok": "Purok 2"
+    },
+    {
+      "id": "hh_010",
+      "code": "HH-010",
+      "head": "Felipe Salvacion",
+      "address": "Purok 1, Cagraray",
+      "members": 5,
+      "purok": "Purok 1"
+    },
+    {
+      "id": "hh_012",
+      "code": "HH-012",
+      "head": "Benigno Aquino Jr.",
+      "address": "Purok 3, Cagraray",
+      "members": 4,
+      "purok": "Purok 3"
+    },
+    {
+      "id": "hh_014",
+      "code": "HH-014",
+      "head": "Rodrigo Cabrera",
+      "address": "Purok 2, Cagraray",
+      "members": 3,
+      "purok": "Purok 2"
+    },
+    {
+      "id": "hh_015",
+      "code": "HH-015",
+      "head": "Nena Rosario",
+      "address": "Purok 3, Cagraray",
+      "members": 2,
+      "purok": "Purok 3"
+    },
+    {
+      "id": "hh_016",
+      "code": "HH-016",
+      "head": "Rudy Fernandez",
+      "address": "Purok 1, Cagraray",
+      "members": 4,
+      "purok": "Purok 1"
+    },
+    {
+      "id": "hh_017",
+      "code": "HH-017",
+      "head": "Mila Cruz",
+      "address": "Purok 2, Cagraray",
+      "members": 1,
+      "purok": "Purok 2"
+    },
+    {
+      "id": "hh_019",
+      "code": "HH-019",
+      "head": "Lorna Salazar",
+      "address": "Purok 1, Cagraray",
+      "members": 3,
+      "purok": "Purok 1"
+    },
+    {
+      "id": "hh_020",
+      "code": "HH-020",
+      "head": "Mario Hernandez",
+      "address": "Purok 2, Cagraray",
+      "members": 5,
+      "purok": "Purok 2"
+    }
+  ],
+  "volunteers": [
+    {
+      "id": "vol_001",
+      "fullName": "Ramon Villanueva",
+      "contact": "+63 967 890 1234",
+      "skills": "First Aid, Rescue",
+      "team": "Rescue",
+      "status": "Active",
+      "deployment": "Ready"
+    },
+    {
+      "id": "vol_002",
+      "fullName": "Felipe Salvacion",
+      "contact": "+63 911 234 5678",
+      "skills": "Driving, Logistics",
+      "team": "Logistics",
+      "status": "Active",
+      "deployment": "Standby"
+    },
+    {
+      "id": "vol_003",
+      "fullName": "Lorna Salazar",
+      "contact": "+63 910 123 4567",
+      "skills": "Medical, Nursing",
+      "team": "Medical",
+      "status": "Active",
+      "deployment": "Ready"
+    },
+    {
+      "id": "vol_004",
+      "fullName": "Mario Hernandez",
+      "contact": "+63 921 234 5678",
+      "skills": "Swimming, Rescue",
+      "team": "Rescue",
+      "status": "Active",
+      "deployment": "Standby"
+    },
+    {
+      "id": "vol_005",
+      "fullName": "Gloria Macaraeg",
+      "contact": "+63 944 567 8901",
+      "skills": "Communications",
+      "team": "Communications",
+      "status": "On Call",
+      "deployment": "Standby"
+    },
+    {
+      "id": "vol_006",
+      "fullName": "Ricardo Mendoza",
+      "contact": "+63 989 012 3456",
+      "skills": "First Aid",
+      "team": "Medical",
+      "status": "Active",
+      "deployment": "Ready"
+    },
+    {
+      "id": "vol_007",
+      "fullName": "Mila Cruz",
+      "contact": "+63 988 901 2345",
+      "skills": "Cooking, Shelter Mgmt",
+      "team": "Relief",
+      "status": "Active",
+      "deployment": "Ready"
+    },
+    {
+      "id": "vol_008",
+      "fullName": "Edgar Toledana",
+      "contact": "+63 977 008 6455",
+      "skills": "Driving",
+      "team": "Logistics",
+      "status": "Active",
+      "deployment": "Standby"
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_001",
+      "title": "Barangay Assembly 2026",
+      "date": "2026-06-15",
+      "location": "Barangay Hall",
+      "organizer": "Barangay Council",
+      "category": "Assembly",
+      "description": "Quarterly barangay assembly with all residents."
+    },
+    {
+      "id": "evt_002",
+      "title": "SK Basketball League",
+      "date": "2026-06-20",
+      "location": "Barangay Court",
+      "organizer": "SK Council",
+      "category": "Sports",
+      "description": "Inter-purok basketball tournament for youth."
+    },
+    {
+      "id": "evt_003",
+      "title": "Medical Mission",
+      "date": "2026-07-01",
+      "location": "Barangay Health Center",
+      "organizer": "BHW",
+      "category": "Health",
+      "description": "Free medical checkup and medicine distribution."
+    },
+    {
+      "id": "evt_004",
+      "title": "Coastal Clean-up Drive",
+      "date": "2026-07-10",
+      "location": "Cagraray Shoreline",
+      "organizer": "Barangay Council",
+      "category": "Community",
+      "description": "Monthly coastal clean-up activity."
+    },
+    {
+      "id": "evt_005",
+      "title": "Youth Leadership Seminar",
+      "date": "2026-07-18",
+      "location": "Barangay Hall",
+      "organizer": "SK",
+      "category": "SK",
+      "description": "Leadership training for out-of-school youth."
+    },
+    {
+      "id": "evt_006",
+      "title": "Livelihood Training: Hog Raising",
+      "date": "2026-07-25",
+      "location": "Purok 1",
+      "organizer": "DA",
+      "category": "Livelihood",
+      "description": "Training on sustainable hog raising for farmers."
+    }
+  ],
+  "contact_messages": []
 }

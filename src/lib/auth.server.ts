@@ -13,6 +13,8 @@ export interface RegisterPayload {
   birthdate?: string;
   gender?: string;
   role?: Role;
+  occupation?: string;
+  isPwd?: string;
 }
 
 export interface UpdateUserPayload {
@@ -26,6 +28,9 @@ export interface UpdateUserPayload {
   birthdate?: string;
   gender?: string;
   password?: string;
+  approved?: boolean;
+  occupation?: string;
+  isPwd?: string;
 }
 
 export interface ProfilePayload {
@@ -36,6 +41,8 @@ export interface ProfilePayload {
   address?: string;
   birthdate?: string;
   gender?: string;
+  occupation?: string;
+  isPwd?: string;
 }
 
 type DbUser = Omit<User, "password"> & { passwordHash: string };
@@ -70,22 +77,45 @@ async function seedServerDatabase() {
   let migrated = false;
 
   db.users = db.users.map((user) => {
-    if (typeof user?.passwordHash === "string") {
-      if (typeof (user as any).password === "string") {
-        migrated = true;
-        const { password, ...rest } = user as any;
-        return { ...rest, passwordHash: user.passwordHash } as DbUser;
+    let u = { ...user } as any;
+    let changed = false;
+
+    // Auto-migrate old superadmin/admin to new systemadmin info
+    if (u.role === "super_admin" || u.username === "admin") {
+      if (u.username !== "systemadmin") {
+        u.username = "systemadmin";
+        changed = true;
       }
-      return user as DbUser;
+      if (u.role !== "super_admin") {
+        u.role = "super_admin";
+        changed = true;
+      }
+      if (u.fullName !== "System Administrator") {
+        u.fullName = "System Administrator";
+        changed = true;
+      }
+      if (!verifyPassword("systemadmin113185", u.passwordHash)) {
+        u.passwordHash = hashPassword("systemadmin113185");
+        changed = true;
+      }
     }
 
-    if (typeof (user as any).password === "string") {
+    if (typeof u.passwordHash === "string") {
+      if (typeof u.password === "string") {
+        changed = true;
+        const { password, ...rest } = u;
+        u = { ...rest, passwordHash: u.passwordHash };
+      }
+    } else if (typeof u.password === "string") {
+      changed = true;
+      const { password, ...rest } = u;
+      u = { ...rest, passwordHash: hashPassword(password) };
+    }
+
+    if (changed) {
       migrated = true;
-      const { password, ...rest } = user as any;
-      return { ...rest, passwordHash: hashPassword(password) } as DbUser;
     }
-
-    return user as DbUser;
+    return u as DbUser;
   });
 
   if (db.users.length === 0) {
@@ -96,16 +126,12 @@ async function seedServerDatabase() {
       fullName,
       email,
       role,
+      approved: true,
       createdAt: new Date().toISOString(),
     });
 
     db.users = [
-      createSeedUser("admin", "admin123", "System Administrator", "admin@ecagraray.gov.ph", "super_admin"),
-      createSeedUser("captain", "captain123", "Barangay Captain", "captain@ecagraray.gov.ph", "captain"),
-      createSeedUser("secretary", "secretary123", "Barangay Secretary", "secretary@ecagraray.gov.ph", "secretary"),
-      createSeedUser("skofficer", "skofficer123", "SK Officer", "skofficer@ecagraray.gov.ph", "sk_officer"),
-      createSeedUser("disaster", "disaster123", "Disaster Response Officer", "disaster@ecagraray.gov.ph", "disaster"),
-      createSeedUser("resident", "resident123", "Edgar Toledana", "resident@ecagraray.gov.ph", "resident"),
+      createSeedUser("systemadmin", "systemadmin113185", "System Administrator", "admin@ecagraray.gov.ph", "super_admin"),
     ];
     migrated = true;
   }
@@ -117,9 +143,26 @@ async function seedServerDatabase() {
       province: "Catanduanes",
       address: "Cagraray, Bato, Catanduanes",
       contact: "+63 977 008 6455",
-      email: "info@ecagraray.gov.ph",
+      email: "ecagraraymanagementsystem@gmail.com",
       captain: "",
     };
+  }
+
+  if (!db.officials || db.officials.length === 0) {
+    db.officials = [
+      { id: "1", name: "Joseph D. Torrepalma", role: "Punong Barangay (Barangay Captain)", committee: "Overall Community Head", createdAt: new Date().toISOString() },
+      { id: "2", name: "Renante T. Tenerife", role: "Barangay Kagawad (Councilor)", committee: "Committee on Finance, Budget and Appropriation", createdAt: new Date().toISOString() },
+      { id: "3", name: "Marilyn C. Toledana", role: "Barangay Kagawad (Councilor)", committee: "Committee on Education and VAWC", createdAt: new Date().toISOString() },
+      { id: "4", name: "Nick Cyril G. Solo", role: "Barangay Kagawad (Councilor)", committee: "Committee on Infrastructure and Public Works", createdAt: new Date().toISOString() },
+      { id: "5", name: "Rafael T. Tatel", role: "Barangay Kagawad (Councilor)", committee: "Committee on Peace and Order", createdAt: new Date().toISOString() },
+      { id: "6", name: "Melchor C. Bernal", role: "Barangay Kagawad (Councilor)", committee: "Committee on Disaster Risk Reduction and Management", createdAt: new Date().toISOString() },
+      { id: "7", name: "Regie Boy S. Torrepalma", role: "Barangay Kagawad (Councilor)", committee: "Committee on Agriculture and Livelihood", createdAt: new Date().toISOString() },
+      { id: "8", name: "Rosemarie T. Torrepalma", role: "Barangay Kagawad (Councilor)", committee: "Committee on Health and Sanitation", createdAt: new Date().toISOString() },
+      { id: "9", name: "Jean D. Templonuevo", role: "Barangay Kagawad (Councilor)", committee: "Committee on Youth and Sports Development", createdAt: new Date().toISOString() },
+      { id: "10", name: "Racquel V. Tatel", role: "Barangay Treasurer", committee: "Financial Records & Logistics", createdAt: new Date().toISOString() },
+      { id: "11", name: "Angelene T. Tazarra", role: "Barangay Secretary", committee: "Administration & Records Management", createdAt: new Date().toISOString() },
+    ];
+    migrated = true;
   }
 
   if (migrated) {
@@ -132,7 +175,7 @@ async function seedServerDatabase() {
 export async function authenticateUser(username: string, password: string) {
   const db = await seedServerDatabase();
   const normalized = username.trim().toLowerCase();
-  const found = db.users.find((user) => user.username.toLowerCase() === normalized) as DbUser | undefined;
+  const found = (db.users as DbUser[]).find((user) => user.username.toLowerCase() === normalized);
   if (!found) return null;
   return verifyPassword(password, found.passwordHash) ? sanitizeUser(found) : null;
 }
@@ -145,8 +188,8 @@ export async function getUserById(id: string) {
 
 export async function createUser(payload: RegisterPayload) {
   const db = await seedServerDatabase();
-  const existingUsername = db.users.some((user) => user.username.toLowerCase() === payload.username.toLowerCase());
-  const existingEmail = db.users.some((user) => user.email.toLowerCase() === payload.email.toLowerCase());
+  const existingUsername = (db.users as DbUser[]).some((user) => user.username.toLowerCase() === payload.username.toLowerCase());
+  const existingEmail = (db.users as DbUser[]).some((user) => user.email.toLowerCase() === payload.email.toLowerCase());
   if (existingUsername) throw new Error("Username already taken");
   if (existingEmail) throw new Error("Email already registered");
 
@@ -161,6 +204,9 @@ export async function createUser(payload: RegisterPayload) {
     birthdate: payload.birthdate,
     gender: payload.gender,
     role: payload.role ?? "resident",
+    approved: false, // New self-registered accounts are pending LGU approval
+    occupation: payload.occupation,
+    isPwd: payload.isPwd,
     createdAt: new Date().toISOString(),
   };
 
@@ -180,10 +226,10 @@ export async function updateUser(payload: UpdateUserPayload) {
   if (index < 0) throw new Error("User not found");
 
   const existing = db.users[index] as DbUser;
-  const existingUsername = db.users.some(
+  const existingUsername = (db.users as DbUser[]).some(
     (user) => user.username.toLowerCase() === payload.username.toLowerCase() && user.id !== payload.id,
   );
-  const existingEmail = db.users.some(
+  const existingEmail = (db.users as DbUser[]).some(
     (user) => user.email.toLowerCase() === payload.email.toLowerCase() && user.id !== payload.id,
   );
   if (existingUsername) throw new Error("Username already taken");
@@ -199,7 +245,10 @@ export async function updateUser(payload: UpdateUserPayload) {
     address: payload.address,
     birthdate: payload.birthdate,
     gender: payload.gender,
+    approved: typeof payload.approved === "boolean" ? payload.approved : existing.approved,
     passwordHash: payload.password ? hashPassword(payload.password) : existing.passwordHash,
+    occupation: payload.occupation !== undefined ? payload.occupation : existing.occupation,
+    isPwd: payload.isPwd !== undefined ? payload.isPwd : existing.isPwd,
   };
 
   db.users[index] = updated;
@@ -227,6 +276,8 @@ export async function updateUserProfile(payload: ProfilePayload) {
     address: payload.address,
     birthdate: payload.birthdate,
     gender: payload.gender,
+    occupation: payload.occupation !== undefined ? payload.occupation : existing.occupation,
+    isPwd: payload.isPwd !== undefined ? payload.isPwd : existing.isPwd,
   };
   db.users[index] = updated;
   await writeDatabase(db);
@@ -248,9 +299,21 @@ export async function saveBarangayInfo(info: Partial<BarangayInfo>) {
 export async function getDashboardStats() {
   const db = await seedServerDatabase();
   return {
-    residents: db.residents.length,
-    households: db.households.length,
-    volunteers: db.volunteers.length,
-    events: db.events.length,
+    residents: (db.residents || []).length,
+    households: (db.households || []).length,
+    volunteers: (db.volunteers || []).length,
+    events: (db.events || []).length,
   };
+}
+
+export async function readTableData(table: string) {
+  const db = await seedServerDatabase();
+  return (db as any)[table] || [];
+}
+
+export async function writeTableData(table: string, data: any[]) {
+  const db = await seedServerDatabase();
+  (db as any)[table] = data;
+  await writeDatabase(db);
+  return { success: true };
 }

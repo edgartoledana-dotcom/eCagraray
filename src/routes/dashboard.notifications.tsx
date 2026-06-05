@@ -1,23 +1,44 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStored } from "../lib/store";
 import { Button, Card, EmptyState, PageHeader, Badge } from "../components/ui-kit";
 import { Bell, Trash2, Check } from "lucide-react";
 import type { Notification } from "../lib/notify";
+import { getTableData, saveTableData } from "../lib/api/auth.functions";
 
 export const Route = createFileRoute("/dashboard/notifications")({ component: Page });
 
 function Page() {
   const [items, setItems] = useStored<Notification[]>("notifications", []);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+
+  useEffect(() => {
+    getTableData({ data: { table: "notifications" } })
+      .then((serverData) => {
+        if (serverData && Array.isArray(serverData)) {
+          setItems(serverData as Notification[]);
+        }
+      })
+      .catch((err) => console.warn("Could not sync load notifications:", err));
+  }, []);
+
+  const updateItemsAndSync = async (nextItems: Notification[]) => {
+    setItems(nextItems);
+    try {
+      await saveTableData({ data: { table: "notifications", data: nextItems } });
+    } catch (err) {
+      console.error("Could not sync notifications on server:", err);
+    }
+  };
+
   const list = filter === "unread" ? items.filter((i) => !i.read) : items;
 
   return (
     <div>
       <PageHeader title="Notifications" subtitle="System-generated alerts and updates." action={
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setItems(items.map((n) => ({ ...n, read: true })))}><Check className="h-4 w-4" /> Mark all read</Button>
-          <Button variant="outline" onClick={() => setItems([])}><Trash2 className="h-4 w-4" /> Clear</Button>
+          <Button variant="outline" onClick={() => updateItemsAndSync(items.map((n) => ({ ...n, read: true })))}><Check className="h-4 w-4" /> Mark all read</Button>
+          <Button variant="outline" onClick={() => updateItemsAndSync([])}><Trash2 className="h-4 w-4" /> Clear</Button>
         </div>
       } />
       <div className="mb-4 flex gap-2">
@@ -38,8 +59,8 @@ function Page() {
                   <div className="text-xs text-muted-foreground">{new Date(n.createdAt).toLocaleString()}</div>
                 </div>
                 <div className="flex gap-1">
-                  {!n.read && <button onClick={() => setItems(items.map((x) => x.id === n.id ? { ...x, read: true } : x))} className="rounded p-1.5 hover:bg-muted"><Check className="h-4 w-4" /></button>}
-                  <button onClick={() => setItems(items.filter((x) => x.id !== n.id))} className="rounded p-1.5 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
+                  {!n.read && <button onClick={() => updateItemsAndSync(items.map((x) => x.id === n.id ? { ...x, read: true } : x))} className="rounded p-1.5 hover:bg-muted"><Check className="h-4 w-4" /></button>}
+                  <button onClick={() => updateItemsAndSync(items.filter((x) => x.id !== n.id))} className="rounded p-1.5 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
                 </div>
               </li>
             ))}

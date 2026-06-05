@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStored, uid, canRole } from "../lib/store";
 import { Button, Card, EmptyState, Input, Modal, PageHeader, Badge, Select, Textarea } from "../components/ui-kit";
 import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { pushNotification } from "../lib/notify";
 import { toast } from "sonner";
+import { getTableData, saveTableData } from "../lib/api/auth.functions";
 
 export const Route = createFileRoute("/dashboard/alerts")({ component: Page });
 
@@ -25,12 +26,32 @@ function Page() {
   const active = items.filter((a) => a.status === "active");
   const history = items.filter((a) => a.status === "resolved");
 
+  useEffect(() => {
+    getTableData({ data: { table: "alerts" } })
+      .then((serverData) => {
+        if (serverData && Array.isArray(serverData)) {
+          setItems(serverData as A[]);
+        }
+      })
+      .catch((err) => console.warn("Could not sync load alerts:", err));
+  }, []);
+
+  const updateItemsAndSync = async (nextItems: A[]) => {
+    setItems(nextItems);
+    try {
+      await saveTableData({ data: { table: "alerts", data: nextItems } });
+    } catch (err) {
+      console.error("Could not sync alerts on server:", err);
+    }
+  };
+
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing || !editing.title) return toast.error("Title required");
     const isNew = !editing.id;
     const payload = isNew ? { ...editing, id: uid(), createdAt: new Date().toISOString(), status: "active" as const } : editing;
-    setItems(isNew ? [payload, ...items] : items.map((i) => i.id === payload.id ? payload : i));
+    const nextItems = isNew ? [payload, ...items] : items.map((i) => i.id === payload.id ? payload : i);
+    void updateItemsAndSync(nextItems);
     if (isNew) pushNotification({ title: `${payload.level} ${payload.type} Alert`, message: payload.title, type: "alert" });
     setOpen(false); toast.success("Saved");
   };
@@ -71,8 +92,8 @@ function Page() {
                 <div className="mt-1 text-xs text-muted-foreground">📍 {a.location}</div>
                 {canManage && (
                   <div className="mt-3 flex gap-2">
-                    <Button variant="outline" onClick={() => setItems(items.map((x) => x.id === a.id ? { ...x, status: "resolved" } : x))}>Mark Resolved</Button>
-                    <Button variant="ghost" onClick={() => { if (confirm("Delete?")) setItems(items.filter((x) => x.id !== a.id)); }}><Trash2 className="h-4 w-4" /></Button>
+                    <Button variant="outline" onClick={() => updateItemsAndSync(items.map((x) => x.id === a.id ? { ...x, status: "resolved" } : x))}>Mark Resolved</Button>
+                    <Button variant="ghost" onClick={() => { if (confirm("Delete?")) updateItemsAndSync(items.filter((x) => x.id !== a.id)); }}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 )}
               </div>

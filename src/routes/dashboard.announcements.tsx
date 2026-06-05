@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStored, uid, canRole } from "../lib/store";
 import { Button, Card, EmptyState, Input, Modal, PageHeader, Badge, Select, Textarea } from "../components/ui-kit";
 import { Megaphone, Pin, Archive, Plus, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { pushNotification } from "../lib/notify";
 import { toast } from "sonner";
+import { getTableData, saveTableData } from "../lib/api/auth.functions";
 
 export const Route = createFileRoute("/dashboard/announcements")({ component: Page });
 
@@ -21,6 +22,25 @@ function Page() {
   const [editing, setEditing] = useState<A | null>(null);
   const [filter, setFilter] = useState("All");
 
+  useEffect(() => {
+    getTableData({ data: { table: "announcements" } })
+      .then((serverData) => {
+        if (serverData && Array.isArray(serverData)) {
+          setItems(serverData as A[]);
+        }
+      })
+      .catch((err) => console.warn("Could not sync load announcements:", err));
+  }, []);
+
+  const updateItemsAndSync = async (nextItems: A[]) => {
+    setItems(nextItems);
+    try {
+      await saveTableData({ data: { table: "announcements", data: nextItems } });
+    } catch (err) {
+      console.error("Could not sync announcements on server:", err);
+    }
+  };
+
   const list = items
     .filter((i) => (filter === "All" || i.category === filter))
     .sort((a, b) => (Number(b.pinned) - Number(a.pinned)) || b.createdAt.localeCompare(a.createdAt));
@@ -31,7 +51,8 @@ function Page() {
     if (!editing.title.trim()) return toast.error("Title required");
     const isNew = !editing.id;
     const payload = isNew ? { ...editing, id: uid(), createdAt: new Date().toISOString() } : editing;
-    setItems(isNew ? [payload, ...items] : items.map((i) => i.id === payload.id ? payload : i));
+    const nextItems = isNew ? [payload, ...items] : items.map((i) => i.id === payload.id ? payload : i);
+    void updateItemsAndSync(nextItems);
     if (isNew) pushNotification({ title: "New Announcement", message: payload.title, type: "info" });
     setOpen(false); toast.success(isNew ? "Posted" : "Updated");
   };
@@ -69,10 +90,10 @@ function Page() {
                 <p className="mt-1 text-sm text-muted-foreground line-clamp-3">{a.body}</p>
                 {canManage && (
                   <div className="mt-3 flex gap-1">
-                    <button onClick={() => setItems(items.map((x) => x.id === a.id ? { ...x, pinned: !x.pinned } : x))} className="rounded p-1.5 hover:bg-muted"><Pin className="h-4 w-4" /></button>
-                    <button onClick={() => setItems(items.map((x) => x.id === a.id ? { ...x, archived: !x.archived } : x))} className="rounded p-1.5 hover:bg-muted"><Archive className="h-4 w-4" /></button>
+                    <button onClick={() => updateItemsAndSync(items.map((x) => x.id === a.id ? { ...x, pinned: !x.pinned } : x))} className="rounded p-1.5 hover:bg-muted"><Pin className="h-4 w-4" /></button>
+                    <button onClick={() => updateItemsAndSync(items.map((x) => x.id === a.id ? { ...x, archived: !x.archived } : x))} className="rounded p-1.5 hover:bg-muted"><Archive className="h-4 w-4" /></button>
                     <button onClick={() => { setEditing(a); setOpen(true); }} className="rounded p-1.5 hover:bg-muted"><Pencil className="h-4 w-4" /></button>
-                    <button onClick={() => { if (confirm("Delete?")) setItems(items.filter((x) => x.id !== a.id)); }} className="rounded p-1.5 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={() => { if (confirm("Delete?")) updateItemsAndSync(items.filter((x) => x.id !== a.id)); }} className="rounded p-1.5 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 )}
               </div>

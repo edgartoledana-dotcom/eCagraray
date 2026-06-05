@@ -1,5 +1,15 @@
 import type { DatabaseSchema } from "./db.server";
 
+interface D1PreparedStatement {
+  bind(...values: any[]): D1PreparedStatement;
+  first<T = any>(): Promise<T | null>;
+  run(): Promise<any>;
+}
+
+interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+}
+
 const STORE_KEY = "main";
 
 async function getD1(): Promise<D1Database | null> {

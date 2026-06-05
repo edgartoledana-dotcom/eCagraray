@@ -30,7 +30,7 @@ export function defaultDatabase(): DatabaseSchema {
       province: "Catanduanes",
       address: "Cagraray, Bato, Catanduanes",
       contact: "+63 977 008 6455",
-      email: "info@ecagraray.gov.ph",
+      email: "ecagraraymanagementsystem@gmail.com",
       captain: "",
     },
     residents: [],

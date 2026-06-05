@@ -21,6 +21,7 @@ import { Route as DashboardSurveysRouteImport } from './routes/dashboard.surveys
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardResidentsRouteImport } from './routes/dashboard.residents'
 import { Route as DashboardReportsRouteImport } from './routes/dashboard.reports'
+import { Route as DashboardOfficialsRouteImport } from './routes/dashboard.officials'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
 import { Route as DashboardIncidentsRouteImport } from './routes/dashboard.incidents'
 import { Route as DashboardHouseholdsRouteImport } from './routes/dashboard.households'
@@ -92,6 +93,11 @@ const DashboardReportsRoute = DashboardReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardOfficialsRoute = DashboardOfficialsRouteImport.update({
+  id: '/officials',
+  path: '/officials',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/households': typeof DashboardHouseholdsRoute
   '/dashboard/incidents': typeof DashboardIncidentsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
+  '/dashboard/officials': typeof DashboardOfficialsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/residents': typeof DashboardResidentsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/dashboard/households': typeof DashboardHouseholdsRoute
   '/dashboard/incidents': typeof DashboardIncidentsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
+  '/dashboard/officials': typeof DashboardOfficialsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/residents': typeof DashboardResidentsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/dashboard/households': typeof DashboardHouseholdsRoute
   '/dashboard/incidents': typeof DashboardIncidentsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
+  '/dashboard/officials': typeof DashboardOfficialsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/residents': typeof DashboardResidentsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/dashboard/households'
     | '/dashboard/incidents'
     | '/dashboard/notifications'
+    | '/dashboard/officials'
     | '/dashboard/reports'
     | '/dashboard/residents'
     | '/dashboard/settings'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/dashboard/households'
     | '/dashboard/incidents'
     | '/dashboard/notifications'
+    | '/dashboard/officials'
     | '/dashboard/reports'
     | '/dashboard/residents'
     | '/dashboard/settings'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/dashboard/households'
     | '/dashboard/incidents'
     | '/dashboard/notifications'
+    | '/dashboard/officials'
     | '/dashboard/reports'
     | '/dashboard/residents'
     | '/dashboard/settings'
@@ -382,6 +394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardReportsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/officials': {
+      id: '/dashboard/officials'
+      path: '/officials'
+      fullPath: '/dashboard/officials'
+      preLoaderRoute: typeof DashboardOfficialsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/notifications': {
       id: '/dashboard/notifications'
       path: '/notifications'
@@ -466,6 +485,7 @@ interface DashboardRouteChildren {
   DashboardHouseholdsRoute: typeof DashboardHouseholdsRoute
   DashboardIncidentsRoute: typeof DashboardIncidentsRoute
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
+  DashboardOfficialsRoute: typeof DashboardOfficialsRoute
   DashboardReportsRoute: typeof DashboardReportsRoute
   DashboardResidentsRoute: typeof DashboardResidentsRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
@@ -487,6 +507,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardHouseholdsRoute: DashboardHouseholdsRoute,
   DashboardIncidentsRoute: DashboardIncidentsRoute,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
+  DashboardOfficialsRoute: DashboardOfficialsRoute,
   DashboardReportsRoute: DashboardReportsRoute,
   DashboardResidentsRoute: DashboardResidentsRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,

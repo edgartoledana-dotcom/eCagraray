@@ -111,13 +111,15 @@ export function Modal({ open, onClose, title, children }: { open: boolean; onClo
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm transition-opacity duration-300" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative my-auto w-full max-w-lg rounded-3xl border border-border/50 bg-card/90 p-8 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 dark:bg-card/95"
+        className="relative my-auto w-full max-w-lg rounded-2xl sm:rounded-3xl border border-border/50 bg-card/90 p-5 sm:p-8 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 dark:bg-card/95 max-h-[90vh] flex flex-col"
       >
-        <div className="mb-6 flex items-center justify-between">
-          <h3 className="text-xl font-bold tracking-tight">{title}</h3>
+        <div className="mb-6 flex items-center justify-between shrink-0">
+          <h3 className="text-lg sm:text-xl font-bold tracking-tight">{title}</h3>
           <button onClick={onClose} className="rounded-full p-1.5 hover:bg-muted transition text-muted-foreground hover:text-foreground">✕</button>
         </div>
-        {children}
+        <div className="overflow-y-auto flex-1 pr-1.5 -mr-1.5">
+          {children}
+        </div>
       </div>
     </div>
   );
