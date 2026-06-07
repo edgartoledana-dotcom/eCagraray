@@ -460,14 +460,16 @@ export async function withTransaction<T>(fn: () => Promise<T>): Promise<T> {
 // ---------------------------------------------------------------------------
 // Bootstraps the first super_admin account when the users table is empty.
 // This ensures the system is never locked on first run.
+/** Known bootstrap password printed here and in dev console. Change after first login. */
+const BOOTSTRAP_PASSWORD = "Admin123!";
+
 async function bootstrapFirstAdminIfNeeded(): Promise<void> {
   const count = await db.count("users");
   if (count > 0) return;
 
   const crypto = await import("node:crypto");
-  const password = "admin" + Date.now().toString(36).toUpperCase();
   const salt = crypto.randomBytes(16).toString("hex");
-  const derived = crypto.scryptSync(password, salt, 64).toString("hex");
+  const derived = crypto.scryptSync(BOOTSTRAP_PASSWORD, salt, 64).toString("hex");
   const passwordHash = `${salt}:${derived}`;
 
   await db.insert("users", {
@@ -475,17 +477,11 @@ async function bootstrapFirstAdminIfNeeded(): Promise<void> {
     username: "admin",
     password_hash: passwordHash,
     full_name: "System Administrator",
-    email: "admin@ecagraray.local",
+    email: "ecagraraymanagementsystem@gmail.com",
     role: "super_admin",
     approved: 1,
     created_at: new Date().toISOString(),
   });
-
-  console.log("\n==================================================");
-  console.log(" FIRST-RUN BOOTSTRAP: Super Admin account created");
-  console.log(` Username: admin`);
-  console.log(` Password: ${password}`);
-  console.log("==================================================\n");
 }
 
 /**
