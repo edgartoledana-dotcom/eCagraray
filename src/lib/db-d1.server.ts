@@ -1,18 +1,21 @@
-import type { DatabaseSchema } from "./db.server";
+// D1 Database operations — uses the new relational schema.
+// This file is kept for backward compatibility; most operations now
+// go through db.server.ts which handles both D1 and local SQLite transparently.
 
 interface D1PreparedStatement {
   bind(...values: any[]): D1PreparedStatement;
   first<T = any>(): Promise<T | null>;
-  run(): Promise<any>;
+  all<T = any>(): Promise<{ results: T[]; success: boolean }>;
+  run(): Promise<{ meta: { changes: number; lastInsertRowid: number | bigint }; success: boolean }>;
+  raw?(): Promise<any[]>;
 }
 
 interface D1Database {
   prepare(query: string): D1PreparedStatement;
+  exec?(query: string): Promise<void>;
 }
 
-const STORE_KEY = "main";
-
-async function getD1(): Promise<D1Database | null> {
+export async function getD1(): Promise<D1Database | null> {
   try {
     const specifier = "cloudflare:workers";
     const { env } = await import(/* @vite-ignore */ specifier);
@@ -22,36 +25,56 @@ async function getD1(): Promise<D1Database | null> {
   }
 }
 
-export async function readFromD1(): Promise<DatabaseSchema | null> {
-  const db = await getD1();
-  if (!db) return null;
-
-  const row = await db
-    .prepare("SELECT value FROM app_data WHERE key = ?")
-    .bind(STORE_KEY)
-    .first<{ value: string }>();
-
-  if (!row?.value) return null;
-  return JSON.parse(row.value) as DatabaseSchema;
+// D1AuditEntry type
+export interface D1AuditEntry {
+  id: string;
+  actor: string;
+  actor_id: string;
+  action: string;
+  target: string;
+  details: string;
+  ip: string;
+  user_agent: string;
+  severity: "info" | "warning" | "critical";
+  timestamp: string;
+  previous_hash?: string;
+  current_hash?: string;
 }
 
-export async function writeToD1(database: DatabaseSchema) {
+export async function readAuditLogD1(limit = 200, severity?: string): Promise<D1AuditEntry[]> {
   const db = await getD1();
-  if (!db) throw new Error("D1 database binding not available");
+  if (!db) return [];
+  let sql = "SELECT * FROM audit_log";
+  const params: any[] = [];
+  if (severity && severity !== "all") {
+    sql += " WHERE severity = ?";
+    params.push(severity);
+  }
+  sql += " ORDER BY created_at DESC LIMIT ?";
+  params.push(limit);
+  const result = await db.prepare(sql).bind(...params).all<any>();
+  return result.results || [];
+}
 
+export async function writeAuditLogD1(entry: D1AuditEntry): Promise<void> {
+  const db = await getD1();
+  if (!db) return;
   await db
     .prepare(
-      `INSERT INTO app_data (key, value, updated_at)
-       VALUES (?, ?, datetime('now'))
-       ON CONFLICT(key) DO UPDATE SET
-         value = excluded.value,
-         updated_at = excluded.updated_at`,
+      `INSERT INTO audit_log (id, actor, actor_id, action, target, details, ip, user_agent, severity, created_at, previous_hash, current_hash)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .bind(STORE_KEY, JSON.stringify(database))
+    .bind(
+      entry.id, entry.actor, entry.actor_id, entry.action,
+      entry.target, entry.details, entry.ip, entry.user_agent,
+      entry.severity, entry.timestamp || new Date().toISOString(),
+      entry.previous_hash || "", entry.current_hash || "",
+    )
     .run();
 }
 
-export async function isD1(): Promise<boolean> {
+export async function clearAuditLogD1(): Promise<void> {
   const db = await getD1();
-  return db !== null;
+  if (!db) return;
+  await db.prepare("DELETE FROM audit_log").run();
 }

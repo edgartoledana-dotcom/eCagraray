@@ -1,9 +1,87 @@
 // LocalStorage-backed store for e-Cagraray
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from "react";
+import { toast } from "sonner";
 
 export const STORAGE_KEY_PREFIX = "ecagraray:";
 export const SESSION_KEY = `${STORAGE_KEY_PREFIX}session`;
 export const THEME_KEY = `${STORAGE_KEY_PREFIX}theme`;
+
+/**
+ * Read the stored session token from localStorage or sessionStorage.
+ * Returns null if no session exists or the token is malformed.
+ */
+/**
+ * Check if an error message indicates the session has expired or is invalid.
+ */
+export function isSessionExpiredError(err: any): boolean {
+  if (!err) return false;
+  const msg = typeof err === "string" ? err : err?.message ?? "";
+  return (
+    msg.includes("Session expired") ||
+    msg.includes("session has expired") ||
+    msg.includes("Authentication required") ||
+    msg.includes("Please sign in again")
+  );
+}
+
+/**
+ * Clear the stored session (both localStorage and sessionStorage) and redirect
+ * the user to the login page. Call this when an API response indicates the
+ * session has expired.
+ *
+ * Uses a module-level guard to prevent multiple redirects when several parallel
+ * requests fail simultaneously.
+ */
+let _sessionExpiredRedirecting = false;
+
+export function handleSessionExpired(
+  redirectTo = "/login",
+  options?: { onBeforeRedirect?: () => void },
+): void {
+  if (_sessionExpiredRedirecting) return;
+  _sessionExpiredRedirecting = true;
+
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {}
+
+  // Allow caller to show feedback (e.g., toast) before redirect
+  options?.onBeforeRedirect?.();
+
+  // Small delay to let any feedback render before navigating
+  setTimeout(() => {
+    window.location.href = redirectTo;
+  }, 200);
+}
+
+export function getSessionToken(): string | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.token === "string" && parsed.token.length > 0) {
+      return parsed.token;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Wraps data with the stored session token for authenticated server function calls.
+ * Only injects the token if one is available (e.g., dashboard pages that are
+ * already inside AuthProvider).
+ */
+export function withToken<T extends Record<string, any>>(data: T): T & { token?: string } {
+  if ((data as any).token) return data as T & { token?: string };
+  const token = getSessionToken();
+  if (token) {
+    return { ...data, token };
+  }
+  return data as T & { token?: string };
+}
 
 type Listener = () => void;
 const listeners = new Map<string, Set<Listener>>();
@@ -59,6 +137,45 @@ export function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
+export function useSyncable<T>(
+  table: string,
+  fallback: T,
+  opts?: { refreshInterval?: number },
+): [T, (v: T | ((p: T) => T)) => void, (nextItems: T) => Promise<void>, () => Promise<void>] {
+  const [items, setItems] = useStored<T>(table, fallback);
+  const seqRef = useRef(0);
+
+  const updateItemsAndSync = useCallback(async (nextItems: T) => {
+    setItems(nextItems);
+    const seq = ++seqRef.current;
+    try {
+      const { saveTableData } = await import("./api/auth.functions");
+      await saveTableData({ data: withToken({ table, data: nextItems as any[] }) });
+    } catch (err) {
+      console.error(`[syncable] Failed to save ${table}:`, err);
+      toast.error(`Failed to save changes. Please try again.`);
+    }
+  }, [table, setItems]);
+
+  const refreshFromServer = useCallback(async () => {
+    try {
+      const { getTableData } = await import("./api/auth.functions");
+      const serverData = await getTableData({ data: withToken({ table }) });
+      if (serverData && Array.isArray(serverData)) {
+        setItems(serverData as T);
+      }
+    } catch {}
+  }, [table, setItems]);
+
+  useEffect(() => {
+    if (!opts?.refreshInterval) return;
+    const id = setInterval(refreshFromServer, opts.refreshInterval);
+    return () => clearInterval(id);
+  }, [opts?.refreshInterval, refreshFromServer]);
+
+  return [items, setItems, updateItemsAndSync, refreshFromServer];
+}
+
 // Domain types
 export type Role =
   | "super_admin"
@@ -93,6 +210,12 @@ export const ROLE_PERMISSIONS = {
   residentsManage: ["super_admin","secretary"] as Role[],
   householdsManage: ["super_admin","secretary"] as Role[],
   officialsManage: ["super_admin"] as Role[],
+  contactMessages: ["super_admin","secretary"] as Role[],
+  evacuationManage: ["super_admin","disaster","captain"] as Role[],
+  notificationsManage: ["super_admin","captain","secretary"] as Role[],
+  complaintsFile: ["super_admin","captain","secretary","resident"] as Role[],
+  emergencyRequest: ["super_admin","disaster","captain","resident"] as Role[],
+  incidentsReport: ["super_admin","captain","disaster","resident"] as Role[],
 } as const;
 
 export type PermissionKey = keyof typeof ROLE_PERMISSIONS;
@@ -121,5 +244,17 @@ export interface User {
   approved?: boolean;
   occupation?: string;
   isPwd?: string;
+  civilStatus?: string;
+  bloodType?: string;
+  emergencyContact?: string;
+  emergencyPhone?: string;
+  purok?: string;
+  religion?: string;
+  nationality?: string;
+  educationLevel?: string;
+  philhealthNo?: string;
+  tinNo?: string;
+  voterIdNo?: string;
   createdAt: string;
+  passwordHash?: string;
 }

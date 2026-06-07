@@ -10,10 +10,34 @@ compatibility_flags = ["nodejs_compat"]
 directory = ".output/public"
 binding = "ASSETS"
 
+# Cloudflare Workers AI — free tier (no API keys, no credit card)
+# Used as an opt-in LLM upgrade path for the AI Assistant / AI Search.
+# Falls back to smart rules when unavailable (e.g. local dev outside Cloudflare).
+[ai]
+binding = "AI"
+
+# Durable Object binding for real-time badge notifications (BadgeHub)
+# Temporarily disabled — needs Nitro cloudflare_module DO export support.
+# [[durable_objects.bindings]]
+# name = "BADGE_HUB"
+# class_name = "BadgeHub"
+# 
+# [[migrations]]
+# tag = "v5-badge-hub"
+# new_sqlite_classes = ["BadgeHub"]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "ecagraray"
-database_id = "local-ecagraray-db"
+database_id = "550a05be-867b-4481-97a3-a65c78c2672e"
 
 [vars]
 NODE_ENV = "production"
+
+# Email secrets are NOT committed to git. Set them in:
+#   - Cloudflare Dashboard → Workers & Pages → ecagraray → Settings → Variables and Secrets
+#   - or locally via `wrangler secret put NAME` (see .dev.vars.example)
+# Required secrets:
+#   RESEND_API_KEY
+#   EMAIL_FROM
+#   EMAIL_REPLY_TO

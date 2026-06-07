@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useStored } from "../lib/store";
+import { useStored, withToken } from "../lib/store";
 import { Button, Card, PageHeader, EmptyState } from "../components/ui-kit";
 import { Download, Printer, FileDown, CheckCircle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -44,7 +44,7 @@ function Page() {
   useEffect(() => {
     const syncTable = async (key: string, setter: (val: any[]) => void) => {
       try {
-        const data = await getTableData({ data: { table: key } });
+        const data = await getTableData({ data: withToken({ table: key }) });
         if (data && Array.isArray(data)) setter(data);
       } catch (err) {
         console.warn(`Failed to sync ${key} for reports:`, err);
@@ -203,8 +203,7 @@ function Page() {
                   {incidents.map((inc, i) => (
                     <tr key={inc.id || i} className="border-b border-gray-200">
                       <td className="p-2 border-r border-gray-300 font-semibold">{inc.type}</td>
-                      <td className="p-2 border-r border-gray-300">{inc.priority || "—"}</td>
-                      <td className="p-2 border-r border-gray-300">{inc.requester || "—"}</td>
+                      <td className="p-2 border-r border-gray-300">{inc.reporter || "—"}</td>
                       <td className="p-2 border-r border-gray-300">{inc.location || "—"}</td>
                       <td className="p-2 border-r border-gray-300">{inc.status || "—"}</td>
                       <td className="p-2 border-r border-gray-300">{inc.createdAt ? new Date(inc.createdAt).toLocaleDateString() : "—"}</td>
@@ -263,7 +262,7 @@ function Page() {
                   {alerts.map((a, i) => (
                     <tr key={a.id || i} className="border-b border-gray-200">
                       <td className="p-2 border-r border-gray-300 font-semibold">{a.type}</td>
-                      <td className="p-2 border-r border-gray-300">{a.severity || "—"}</td>
+                      <td className="p-2 border-r border-gray-300">{a.level || "—"}</td>
                       <td className="p-2 border-r border-gray-300">{a.title || "—"}</td>
                       <td className="p-2 border-r border-gray-300">{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "—"}</td>
                       <td className="p-2">{a.status || "active"}</td>

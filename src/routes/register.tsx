@@ -8,5 +8,5 @@ export const Route = createFileRoute("/register")({
         mode: "register",
       },
     });
-  },
+  }, 
 });

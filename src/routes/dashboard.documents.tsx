@@ -1,18 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useStored, uid, getItem, canRole } from "../lib/store";
-import { Button, Card, EmptyState, Input, Modal, PageHeader, Badge, Select, Textarea } from "../components/ui-kit";
-import { FileText, Plus, Printer } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { useSyncable, uid, getItem, canRole, withToken } from "../lib/store";
+import { Button, Card, EmptyState, Input, Modal, PageHeader, Badge, Select, Textarea, Pagination, exportToCSV } from "../components/ui-kit";
+import { FileText, Plus, Printer, Archive, Trash2, Download, Search } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { toast } from "sonner";
-import { getTableData, saveTableData } from "../lib/api/auth.functions";
+import { getTableData } from "../lib/api/auth.functions";
+import { DeleteModal } from "../components/delete-modal";
+import { pushNotification } from "../lib/notify";
 
 export const Route = createFileRoute("/dashboard/documents")({ component: Page });
 
 const SERVICES = ["Barangay Clearance","Residency Certificate","Indigency Certificate","Business Permit"];
 const FLOW = ["Pending","Reviewing","Approved","Rejected","Released"];
 
-interface R { id: string; service: string; requester: string; purpose: string; status: string; createdAt: string }
+interface R { id: string; service: string; requester: string; purpose: string; status: string; createdAt: string; archived?: boolean; }
 
 const DEFAULT_OFFICIALS = [
   { id: "1", name: "Joseph D. Torrepalma", role: "Punong Barangay (Barangay Captain)", committee: "Overall Community Head" },
@@ -31,23 +33,22 @@ const DEFAULT_OFFICIALS = [
 function Page() {
   const { user } = useAuth();
   const canManage = canRole(user?.role, "documentsReview");
-  const [items, setItems] = useStored<R[]>("documents_req", []);
+  const [items, setItems, updateItemsAndSync, refreshFromServer] = useSyncable<R[]>("documents_req", [], { refreshInterval: 30000 });
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<R | null>(null);
   const [print, setPrint] = useState<R | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<R | null>(null);
+  const [viewArchived, setViewArchived] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [officials, setOfficials] = useState<any[]>(DEFAULT_OFFICIALS);
   const info = getItem<any>("barangay", {});
+  const [orNumbers, setOrNumbers] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    getTableData({ data: { table: "documents_req" } })
-      .then((serverData) => {
-        if (serverData && Array.isArray(serverData)) {
-          setItems(serverData as R[]);
-        }
-      })
-      .catch((err) => console.warn("Could not sync load documents_req:", err));
-
-    getTableData({ data: { table: "officials" } })
+    refreshFromServer();
+    getTableData({ data: withToken({ table: "officials" }) })
       .then((serverData) => {
         if (serverData && Array.isArray(serverData) && serverData.length > 0) {
           setOfficials(serverData);
@@ -56,14 +57,11 @@ function Page() {
       .catch((err) => console.warn("Could not sync load officials:", err));
   }, []);
 
-  const updateItemsAndSync = async (nextItems: R[]) => {
-    setItems(nextItems);
-    try {
-      await saveTableData({ data: { table: "documents_req", data: nextItems } });
-    } catch (err) {
-      console.error("Could not sync documents_req on server:", err);
+  useEffect(() => {
+    if (print && !orNumbers[print.id]) {
+      setOrNumbers((prev) => ({ ...prev, [print.id]: "9320" + Math.floor(1000 + Math.random() * 9000) }));
     }
-  };
+  }, [print, orNumbers]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,24 +69,94 @@ function Page() {
     const p: R = { ...draft, id: uid(), createdAt: new Date().toISOString(), status: "Pending", requester: user?.fullName || "Resident" };
     const nextItems = [p, ...items];
     void updateItemsAndSync(nextItems);
+    pushNotification({ title: "Document Request", message: `${p.service} — ${p.requester}`, type: "request" });
     setOpen(false); toast.success("Request submitted");
   };
+
+  const archiveApproved = () => {
+    const next = items.map((r) => {
+      if ((r.status === "Approved" || r.status === "Released" || r.status === "Rejected") && !r.archived) {
+        return { ...r, archived: true };
+      }
+      return r;
+    });
+    const changed = next.filter((r: any) => r.archived).length - items.filter((r: any) => r.archived).length;
+    if (changed === 0) return toast.error("No completed requests to archive");
+    void updateItemsAndSync(next);
+    toast.success(`${changed} request(s) archived`);
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    const next = items.filter((r) => r.id !== deleteTarget.id);
+    void updateItemsAndSync(next);
+    setDeleteTarget(null);
+    toast.success("Request deleted");
+  };
+
+  const filteredItems = useMemo(() => {
+    const base = viewArchived ? items.filter((r: any) => r.archived) : items.filter((r: any) => !r.archived);
+    if (!search.trim()) return base;
+    const q = search.toLowerCase();
+    return base.filter((r: any) =>
+      (r.service || "").toLowerCase().includes(q) ||
+      (r.requester || "").toLowerCase().includes(q) ||
+      (r.purpose || "").toLowerCase().includes(q) ||
+      (r.status || "").toLowerCase().includes(q),
+    );
+  }, [items, viewArchived, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const activeItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
 
   const captain = officials.find(o => o.role.toLowerCase().includes("captain") || o.role.toLowerCase().includes("punong barangay")) || DEFAULT_OFFICIALS[0];
   const councilors = officials.filter(o => !o.role.toLowerCase().includes("captain") && !o.role.toLowerCase().includes("punong barangay") && !o.role.toLowerCase().includes("treasurer") && !o.role.toLowerCase().includes("secretary"));
   const treasurer = officials.find(o => o.role.toLowerCase().includes("treasurer")) || DEFAULT_OFFICIALS[9];
   const secretary = officials.find(o => o.role.toLowerCase().includes("secretary")) || DEFAULT_OFFICIALS[10];
 
+  if (!user || (user.role !== "super_admin" && user.role !== "secretary" && user.role !== "resident")) {
+    return <Card><EmptyState icon={FileText} title="Access Restricted" description="You do not have permission to access Documents." /></Card>;
+  }
+
   return (
     <div>
       <PageHeader title="Document Requests" subtitle="Issue official barangay documents online." action={
-        <Button onClick={() => { setDraft({ id:"", service:"Barangay Clearance", requester:"", purpose:"", status:"Pending", createdAt:"" }); setOpen(true); }}>
-          <Plus className="h-4 w-4" /> New Request
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {canManage && (
+            <Button variant="outline" onClick={archiveApproved} className="min-h-[44px]">
+              <Archive className="h-4 w-4" /> Archive
+            </Button>
+          )}
+          <Button onClick={() => { setDraft({ id:"", service:"Barangay Clearance", requester:"", purpose:"", status:"Pending", createdAt:"" }); setOpen(true); }} className="min-h-[44px]">
+            <Plus className="h-4 w-4" /> New Request
+          </Button>
+        </div>
       } />
+      <div className="flex flex-wrap gap-2 mb-3">
+        <button onClick={() => { setViewArchived(false); setPage(1); }} className={`px-3 sm:px-4 py-2.5 sm:py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition min-h-[44px] ${!viewArchived ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>Active Requests</button>
+        <button onClick={() => { setViewArchived(true); setPage(1); }} className={`px-3 sm:px-4 py-2.5 sm:py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition min-h-[44px] ${viewArchived ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>History ({items.filter((r: any) => r.archived).length})</button>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by service, requester, purpose..."
+            className="w-full rounded-xl border border-border/60 bg-background/50 pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary min-h-[44px]"
+          />
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => exportToCSV(filteredItems, `documents-${viewArchived ? "history" : "active"}`, { service: "Service", requester: "Requester", purpose: "Purpose", status: "Status", createdAt: "Date" })}
+          className="min-h-[44px]"
+        >
+          <Download className="h-4 w-4" /> Export CSV
+        </Button>
+      </div>
       <Card>
-        {items.length === 0 ? (
-          <EmptyState icon={FileText} title="No document requests yet" />
+        {activeItems.length === 0 ? (
+          <EmptyState icon={FileText} title={viewArchived ? "No archived requests" : "No document requests yet"} />
         ) : (
           <>
             {/* Desktop View */}
@@ -96,13 +164,13 @@ function Page() {
               <table className="w-full text-sm">
                 <thead className="border-b text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Service</th><th>Requester</th><th>Purpose</th><th>Status</th><th>Date</th><th /></tr></thead>
                 <tbody>
-                  {items.map((r) => (
+                  {activeItems.map((r) => (
                     <tr key={r.id} className="border-b last:border-0">
                       <td className="py-3 font-medium">{r.service}</td>
                       <td>{r.requester}</td>
                       <td className="max-w-[240px] truncate">{r.purpose}</td>
                       <td>
-                        {canManage ? (
+                        {canManage && !viewArchived ? (
                           <Select value={r.status} onChange={(e) => updateItemsAndSync(items.map((x) => x.id === r.id ? { ...x, status: e.target.value } : x))}>
                             {FLOW.map((s) => <option key={s}>{s}</option>)}
                           </Select>
@@ -111,7 +179,16 @@ function Page() {
                         )}
                       </td>
                       <td className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</td>
-                      <td className="text-right"><Button variant="outline" onClick={() => setPrint(r)} disabled={r.status !== "Released" && r.status !== "Approved"}><Printer className="h-4 w-4" /> Print</Button></td>
+                      <td className="text-right">
+                        <div className="inline-flex gap-1">
+                          <Button variant="outline" onClick={() => setPrint(r)} disabled={r.status !== "Released" && r.status !== "Approved"}><Printer className="h-4 w-4" /> Print</Button>
+                          {viewArchived && canManage && (
+                            <button onClick={() => setDeleteTarget(r)} className="rounded-full p-2 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition" title="Delete">
+                              <Trash2 className="h-4.5 w-4.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -120,20 +197,20 @@ function Page() {
 
             {/* Mobile View */}
             <div className="md:hidden space-y-4">
-              {items.map((r) => (
+              {activeItems.map((r) => (
                 <div key={r.id} className="rounded-2xl border border-border/50 bg-background/30 p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="font-extrabold text-sm text-foreground">{r.service}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">Requested by {r.requester}</div>
                     </div>
-                    <div>
-                      <Button
-                        variant="outline"
-                        onClick={() => setPrint(r)}
-                        disabled={r.status !== "Released" && r.status !== "Approved"}
-                        className="px-3 py-1.5 text-xs rounded-xl"
-                      >
+                    <div className="flex gap-1.5">
+                      {viewArchived && canManage && (
+                        <button onClick={() => setDeleteTarget(r)} className="rounded-xl p-2.5 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition min-h-[44px] min-w-[44px] flex items-center justify-center" title="Delete">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                      <Button variant="outline" onClick={() => setPrint(r)} disabled={r.status !== "Released" && r.status !== "Approved"} className="px-3 py-2 text-xs rounded-xl min-h-[44px]">
                         <Printer className="h-3.5 w-3.5" /> Print
                       </Button>
                     </div>
@@ -145,25 +222,17 @@ function Page() {
                     </div>
                     <div>
                       <div className="font-bold text-muted-foreground uppercase tracking-wider text-[9px]">Request Date</div>
-                      <div className="font-semibold text-slate-800 dark:text-slate-250">
-                        {new Date(r.createdAt).toLocaleDateString()}
-                      </div>
+                      <div className="font-semibold text-slate-800 dark:text-slate-250">{new Date(r.createdAt).toLocaleDateString()}</div>
                     </div>
                     <div>
                       <div className="font-bold text-muted-foreground uppercase tracking-wider text-[9px]">Approval Status</div>
                       <div className="mt-0.5">
-                        {canManage ? (
-                          <Select
-                            value={r.status}
-                            onChange={(e) => updateItemsAndSync(items.map((x) => x.id === r.id ? { ...x, status: e.target.value } : x))}
-                            className="px-2 py-1 text-xs rounded-xl h-7.5"
-                          >
+                        {canManage && !viewArchived ? (
+                          <Select value={r.status} onChange={(e) => updateItemsAndSync(items.map((x) => x.id === r.id ? { ...x, status: e.target.value } : x))} className="px-2 py-1 text-xs rounded-xl h-7.5">
                             {FLOW.map((s) => <option key={s}>{s}</option>)}
                           </Select>
                         ) : (
-                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-border/50">
-                            {r.status}
-                          </span>
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-border/50">{r.status}</span>
                         )}
                       </div>
                     </div>
@@ -171,9 +240,18 @@ function Page() {
                 </div>
               ))}
             </div>
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
       </Card>
+
+      <DeleteModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        itemName={deleteTarget?.service}
+        message="Delete this document request permanently?"
+      />
 
       <Modal open={open} onClose={() => setOpen(false)} title="Request Document">
         {draft && (
@@ -186,6 +264,7 @@ function Page() {
       </Modal>
 
       {print && (() => {
+        if (!orNumbers[print.id]) return null;
         const d = new Date(print.createdAt || Date.now());
         const day = d.getDate();
         const daySuffix = (day: number) => {
@@ -200,16 +279,16 @@ function Page() {
         const month = d.toLocaleString("en-US", { month: "long" });
         const year = d.getFullYear();
         const dateFormatted = `${month} ${day}, ${year}`;
-        const orNo = "9320" + Math.floor(1000 + Math.random() * 9000);
+        const orNo = orNumbers[print.id];
 
         return (
-          <div className="fixed inset-0 z-50 overflow-auto bg-black/60 p-4 no-print" onClick={() => setPrint(null)}>
+          <div className="fixed inset-0 z-50 overflow-auto bg-black/60 p-2 sm:p-4 no-print" onClick={() => setPrint(null)}>
             <div onClick={(e) => e.stopPropagation()} className="mx-auto max-w-4xl bg-white text-black shadow-2xl rounded-xl">
-              <div className="no-print flex justify-end gap-2 p-4 border-b border-gray-100">
+              <div className="no-print flex justify-end gap-2 p-3 sm:p-4 border-b border-gray-100">
                 <Button variant="outline" onClick={() => setPrint(null)}>Close</Button>
                 <Button onClick={() => window.print()}><Printer className="h-4 w-4" /> Print Document</Button>
               </div>
-              <div className="p-8 font-serif text-[12px] leading-relaxed text-black bg-white select-text">
+              <div className="p-4 sm:p-8 font-serif text-[10px] sm:text-[12px] leading-relaxed text-black bg-white select-text">
                 {/* LGU Official Header */}
                 <div className="flex items-center justify-between gap-4 mb-3">
                   {/* Left Seal SVG */}
@@ -253,10 +332,10 @@ function Page() {
                 </div>
 
                 {/* 2-Column Body Layout */}
-                <div className="grid grid-cols-10 gap-4 mt-4 items-stretch">
+                <div className="grid grid-cols-1 sm:grid-cols-10 gap-3 sm:gap-4 mt-4 items-stretch">
                   {/* Left Column - Barangay Council (3 / 10 width) */}
-                  <div className="col-span-3 border border-black p-3 text-center space-y-3 text-[8px] leading-tight">
-                    <div className="font-extrabold uppercase text-[8.5px] tracking-tight text-gray-900 border-b border-black/30 pb-1.5 mb-2">
+                  <div className="sm:col-span-3 border border-black p-2.5 sm:p-3 text-center space-y-2 sm:space-y-3 text-[7px] sm:text-[8px] leading-tight">
+                    <div className="font-extrabold uppercase text-[7.5px] sm:text-[8.5px] tracking-tight text-gray-900 border-b border-black/30 pb-1.5 mb-2">
                       Cagraray<br />Barangay Council
                     </div>
 
@@ -294,7 +373,7 @@ function Page() {
                   </div>
 
                   {/* Right Column - Certificate Body (7 / 10 width) */}
-                  <div className="col-span-7 border border-black p-5 flex flex-col justify-between text-[11px] leading-relaxed">
+                  <div className="sm:col-span-7 border border-black p-3 sm:p-5 flex flex-col justify-between text-[9px] sm:text-[11px] leading-relaxed">
                     <div className="space-y-6">
                       <div className="text-center font-bold text-base uppercase tracking-wider underline mt-2 mb-6">
                         {print.service === "Residency Certificate" ? "CERTIFICATE OF RESIDENCY" : print.service.toUpperCase()}

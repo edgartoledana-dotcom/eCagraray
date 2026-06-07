@@ -4,10 +4,10 @@
       "id": "9a3m1nhp7ssl",
       "username": "systemadmin",
       "fullName": "System Administrator",
-      "email": "admin@ecagraray.gov.ph",
+      "email": "ecagraraymanagementsystem@gmail.com",
       "role": "super_admin",
       "createdAt": "2026-06-04T07:53:25.893Z",
-      "passwordHash": "861b9b5f3c01e5de8e82a70db19d6129:c58e842cf97a5f8f0fd408f9c84cdcaf35dc187edb1b5b9e8e04bee0d0f8c9883ca13d82118330195f2180fd05dd2b3e0b76a9d2e2f08cbbe3854f643b8fa559"
+      "passwordHash": "e359de18b21464a7c3a39ea21514be44:0d7b33c8424579d679b6fa498b2e3f5f202ceab49adad9c1e8bc82e6da7ece0243c51b598e6046826c5d9d2a3e91cddb9dfab5d19e8acccf9b99b618322fde4a"
     },
     {
       "id": "84tg8pgr7ssl",
@@ -569,5 +569,130 @@
       "description": "Training on sustainable hog raising for farmers."
     }
   ],
-  "contact_messages": []
+  "officials": [
+    {
+      "id": "1",
+      "name": "Joseph D. Torrepalma",
+      "role": "Punong Barangay (Barangay Captain)",
+      "committee": "Overall Community Head",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "2",
+      "name": "Renante T. Tenerife",
+      "role": "Barangay Kagawad (Councilor)",
+      "committee": "Committee on Finance, Budget and Appropriation",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "3",
+      "name": "Marilyn C. Toledana",
+      "role": "Barangay Kagawad (Councilor)",
+      "committee": "Committee on Education and VAWC",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "4",
+      "name": "Nick Cyril G. Solo",
+      "role": "Barangay Kagawad (Councilor)",
+      "committee": "Committee on Infrastructure and Public Works",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "5",
+      "name": "Rafael T. Tatel",
+      "role": "Barangay Kagawad (Councilor)",
+      "committee": "Committee on Peace and Order",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "6",
+      "name": "Melchor C. Bernal",
+      "role": "Barangay Kagawad (Councilor)",
+      "committee": "Committee on Disaster Risk Reduction and Management",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "7",
+      "name": "Regie Boy S. Torrepalma",
+      "role": "Barangay Kagawad (Councilor)",
+      "committee": "Committee on Agriculture and Livelihood",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "8",
+      "name": "Rosemarie T. Torrepalma",
+      "role": "Barangay Kagawad (Councilor)",
+      "committee": "Committee on Health and Sanitation",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "9",
+      "name": "Jean D. Templonuevo",
+      "role": "Barangay Kagawad (Councilor)",
+      "committee": "Committee on Youth and Sports Development",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "10",
+      "name": "Racquel V. Tatel",
+      "role": "Barangay Treasurer",
+      "committee": "Financial Records & Logistics",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    },
+    {
+      "id": "11",
+      "name": "Angelene T. Tazarra",
+      "role": "Barangay Secretary",
+      "committee": "Administration & Records Management",
+      "createdAt": "2026-06-05T05:22:46.691Z"
+    }
+  ],
+  "alerts": [],
+  "announcements": [],
+  "inquiries": [
+    {
+      "id": "j9toapkogpds",
+      "type": "bug",
+      "status": "in_review",
+      "name": "edgar",
+      "email": "ejtoledana9@gmail.com",
+      "subject": "ai assistant must be more smart ",
+      "message": "Steps to reproduce: Floating ai assistant \nYour name: edgar\nYour email: ejtoledana9@gmail.com",
+      "meta": {
+        "Steps to reproduce": "Floating ai assistant "
+      },
+      "createdAt": "2026-06-06T08:03:41.824Z",
+      "updatedAt": "2026-06-06T08:04:49.893Z"
+    }
+  ],
+  "password_resets": [],
+  "complaints": [
+    {
+      "id": "rhhdin34bafq",
+      "subject": "Hello po",
+      "complainant": "Edgar Toledana",
+      "respondent": "Hey",
+      "description": "Go",
+      "assignedTo": "",
+      "status": "Open",
+      "createdAt": "2026-06-06T17:19:21.494Z"
+    }
+  ],
+  "documents_req": [
+    {
+      "id": "gkb3iz4zaofz",
+      "service": "Barangay Clearance",
+      "requester": "Edgar Toledana",
+      "purpose": "Student scholarship ",
+      "status": "Pending",
+      "createdAt": "2026-06-06T17:18:52.991Z"
+    }
+  ],
+  "incidents": [],
+  "notifications": [],
+  "evac_centers": [],
+  "youth": [],
+  "emergency": [],
+  "polls": []
 }

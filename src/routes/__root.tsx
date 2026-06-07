@@ -57,7 +57,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "e-Cagraray — Smart Barangay Management System" },
       { name: "description", content: "Smart Governance, Disaster Preparedness, and Community Engagement for Barangay Cagraray." },
-      { name: "theme-color", content: "#3b82f6" },
+      { name: "theme-color", content: "#0369A1" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "e-Cagraray" },
@@ -66,7 +66,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: "/manifest.json" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Jost:wght@300;400;500;600;700;800&display=swap" },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/svg+xml", href: "/icon.svg" },
       { rel: "apple-touch-icon", href: "/icon.svg" },
@@ -122,20 +122,30 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         {activeAlert && !dismissed && (
-          <div className="bg-rose-600 text-white py-3 px-4 text-center text-xs font-bold flex items-center justify-between gap-4 animate-pulse-slow border-b border-rose-700 relative z-50 print:hidden">
-            <div className="flex-1 flex items-center justify-center gap-2">
-              <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-300" />
-              <span>
-                <strong>ALERTO SA KALAMIDAD:</strong> {activeAlert.title} — {activeAlert.description} ({activeAlert.location})
+          <div className="bg-rose-600 text-white py-2.5 sm:py-3 px-3 sm:px-4 text-xs font-bold flex items-center justify-between gap-2 sm:gap-4 animate-pulse-slow border-b border-rose-700 relative z-50 print:hidden">
+            <div className="flex-1 flex items-center gap-2 min-w-0">
+              <AlertTriangle className="h-4 w-4 sm:h-4.5 sm:w-4.5 shrink-0 text-amber-300" />
+              <span className="leading-snug text-[11px] sm:text-xs">
+                <strong className="block sm:inline">ALERTO SA KALAMIDAD:</strong>{" "}
+                <span className="block sm:inline">{activeAlert.title} — {activeAlert.description} ({activeAlert.location})</span>
               </span>
             </div>
-            <button onClick={() => setDismissed(true)} className="rounded-full bg-white/10 px-2.5 py-1 hover:bg-white/20 transition text-white font-extrabold text-[10px] uppercase tracking-wider shrink-0">
+            <button onClick={() => setDismissed(true)} className="shrink-0 rounded-full bg-white/10 px-2.5 py-1.5 sm:py-1 hover:bg-white/20 transition text-white font-extrabold text-[10px] uppercase tracking-wider min-h-[32px] min-w-[60px]">
               Dismiss
             </button>
           </div>
         )}
-        <Outlet />
-        <Toaster position="top-right" richColors />
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <Outlet />
+        </div>
+        <Toaster
+          position="top-center"
+          richColors
+          toastOptions={{
+            className:
+              "!top-16 sm:!top-4 !left-1/2 !-translate-x-1/2 !right-auto !w-[min(calc(100vw-2rem),420px)]",
+          }}
+        />
       </AuthProvider>
     </QueryClientProvider>
   );

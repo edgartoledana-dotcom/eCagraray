@@ -2,6 +2,9 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { BadgeHub } from "./lib/badge-hub";
+
+export { BadgeHub };
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -40,6 +43,19 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+
+      // Route WebSocket upgrade & badge notification requests to BadgeHub DO
+      if (url.pathname.startsWith("/_badge/")) {
+        const badgeEnv = env as { BADGE_HUB?: { getByName(name: string): { fetch(req: Request): Promise<Response> } } };
+        if (badgeEnv.BADGE_HUB) {
+          const stub = badgeEnv.BADGE_HUB.getByName("global");
+          return stub.fetch(request);
+        }
+        // No DO binding available — return 404 so client falls back to polling
+        return new Response("BadgeHub not available", { status: 404 });
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

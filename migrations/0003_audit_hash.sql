@@ -1,0 +1,2 @@
+ALTER TABLE audit_log ADD COLUMN previous_hash TEXT NOT NULL DEFAULT '';
+ALTER TABLE audit_log ADD COLUMN current_hash TEXT NOT NULL DEFAULT '';

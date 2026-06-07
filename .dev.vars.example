@@ -1,0 +1,18 @@
+# Local development secrets — copy this file to `.dev.vars` and fill in real values.
+# Cloudflare Workers reads `.dev.vars` automatically during `wrangler dev`.
+# In production, set these as encrypted secrets in the Cloudflare dashboard
+# (Workers → Settings → Variables and Secrets) or via `wrangler secret put NAME`.
+#
+# NEVER commit `.dev.vars` to git (it is already in .gitignore).
+
+# ─── Email (Resend HTTP API) ──────────────────────────────────────────────
+# Get an API key at https://resend.com/api-keys
+# The sender domain must be verified in Resend (e.g. ecagraray.app or ecagraray.gov.ph).
+RESEND_API_KEY=
+
+# Sender "From" address — must use a verified Resend domain.
+# Example: "e-Cagraray <noreply@ecagraray.app>"
+EMAIL_FROM="e-Cagraray <noreply@ecagraray.app>"
+
+# "Reply-To" shown in the email. Defaults to the official LGU Gmail.
+EMAIL_REPLY_TO=ecagraraymanagementsystem@gmail.com

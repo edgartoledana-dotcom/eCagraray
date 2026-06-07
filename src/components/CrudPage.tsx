@@ -1,11 +1,13 @@
 // Generic CRUD page builder for simple list/edit modules
 import { ReactNode, useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Inbox, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Inbox, Upload, Download, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button, Card, EmptyState, Input, Modal, PageHeader } from "./ui-kit";
 import { useStored, uid, type PermissionConfig, type Role, hasPermission } from "../lib/store";
 import { useAuth } from "../lib/auth";
 import { toast } from "sonner";
 import { getTableData, saveTableData } from "../lib/api/auth.functions";
+import { withToken } from "../lib/store";
+import { DeleteModal } from "./delete-modal";
 
 export interface FieldDef {
   name: string;
@@ -20,7 +22,7 @@ export interface CrudConfig<T> {
   title: string;
   subtitle?: string;
   fields: FieldDef[];
-  columns: { key: keyof T | string; label: string; render?: (row: T) => ReactNode }[];
+  columns: { key: keyof T | string; label: string; sortable?: boolean; render?: (row: T) => ReactNode }[];
   searchKeys: (keyof T)[];
   emptyTitle?: string;
   emptyDescription?: string;
@@ -30,6 +32,7 @@ export interface CrudConfig<T> {
     edit?: PermissionConfig;
     delete?: PermissionConfig;
   };
+  pageSize?: number;
 }
 
 export function CrudPage<T extends { id: string; createdAt?: string }>({ config }: { config: CrudConfig<T> }) {
@@ -38,9 +41,14 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<T | null>(null);
   const [open, setOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<T | null>(null);
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = config.pageSize || 20;
 
   useEffect(() => {
-    getTableData({ data: { table: config.storeKey } })
+    getTableData({ data: withToken({ table: config.storeKey }) })
       .then((serverData) => {
         if (serverData && Array.isArray(serverData)) {
           setRows(serverData as T[]);
@@ -54,17 +62,36 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
   const updateRowsAndSync = async (nextRows: T[]) => {
     setRows(nextRows);
     try {
-      await saveTableData({ data: { table: config.storeKey, data: nextRows } });
+      await saveTableData({ data: withToken({ table: config.storeKey, data: nextRows }) });
     } catch (err) {
       console.error(`Could not save table data for ${config.storeKey} on server:`, err);
     }
   };
 
   const filtered = useMemo(() => {
-    if (!q.trim()) return rows;
-    const s = q.toLowerCase();
-    return rows.filter((r) => config.searchKeys.some((k) => String((r as any)[k] || "").toLowerCase().includes(s)));
-  }, [rows, q, config.searchKeys]);
+    let result = rows;
+    if (q.trim()) {
+      const s = q.toLowerCase();
+      result = result.filter((r) => config.searchKeys.some((k) => String((r as any)[k] || "").toLowerCase().includes(s)));
+    }
+    if (sortKey) {
+      result = [...result].sort((a, b) => {
+        const aVal = String((a as any)[sortKey] ?? "");
+        const bVal = String((b as any)[sortKey] ?? "");
+        const numA = Number(aVal);
+        const numB = Number(bVal);
+        if (!isNaN(numA) && !isNaN(numB)) return sortDir === "asc" ? numA - numB : numB - numA;
+        return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      });
+    }
+    return result;
+  }, [rows, q, config.searchKeys, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [q]);
 
   const canCreate = !config.permissions?.create || (user && hasPermission(user.role, config.permissions.create));
   const canEdit = !config.permissions?.edit || (user && hasPermission(user.role, config.permissions.edit));
@@ -73,11 +100,11 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
   const openNew = () => { if (!canCreate) return; setEditing({ id: "" } as T); setOpen(true); };
   const openEdit = (r: T) => { if (!canEdit) return; setEditing({ ...r }); setOpen(true); };
 
-  const remove = (r: T) => {
-    if (!canDelete) return;
-    if (!confirm("Delete this record?")) return;
-    const nextRows = rows.filter((x) => x.id !== r.id);
+  const remove = () => {
+    if (!canDelete || !deleteTarget) return;
+    const nextRows = rows.filter((x) => x.id !== deleteTarget.id);
     void updateRowsAndSync(nextRows);
+    setDeleteTarget(null);
     toast.success("Deleted");
   };
 
@@ -94,6 +121,34 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
     void updateRowsAndSync(nextRows);
     setOpen(false); setEditing(null);
     toast.success(isNew ? "Created" : "Updated");
+  };
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const exportCSV = () => {
+    const headers = config.columns.map((c) => c.label);
+    const csvRows = filtered.map((r) =>
+      config.columns.map((c) => {
+        const val = String((r as any)[c.key] ?? "");
+        return val.includes(",") || val.includes('"') || val.includes("\n") ? `"${val.replace(/"/g, '""')}"` : val;
+      })
+    );
+    const csv = [headers.join(","), ...csvRows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${config.storeKey}_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filtered.length} records`);
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,10 +198,8 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
         const rawHeaders = csvRows[0].map(h => h.trim());
         const dataRows = csvRows.slice(1);
 
-        // Normalize string for fuzzy matching
         const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-        // Map columns to fields
         const fieldMap: Record<number, string> = {};
         rawHeaders.forEach((header, index) => {
           const nHeader = norm(header);
@@ -204,7 +257,6 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
             }
           });
 
-          // Fill default values
           config.fields.forEach(f => {
             if (record[f.name] === undefined) {
               record[f.name] = f.type === "number" ? 0 : f.type === "select" ? (f.options?.[0] || "") : "";
@@ -238,13 +290,8 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
           canCreate ? (
             <div className="flex gap-2.5">
               <label className="inline-flex items-center justify-center gap-2 rounded-full border border-border/70 bg-card/60 backdrop-blur-sm px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition hover:border-primary hover:text-primary active:scale-[0.98] cursor-pointer">
-                <Upload className="h-4 w-4 text-primary" /> Import Excel/CSV
-                <input
-                  type="file"
-                  accept=".csv,.txt"
-                  className="hidden"
-                  onChange={handleImport}
-                />
+                <Upload className="h-4 w-4 text-primary" /> Import CSV
+                <input type="file" accept=".csv,.txt" className="hidden" onChange={handleImport} />
               </label>
               <Button onClick={openNew}><Plus className="h-4 w-4" /> Add New</Button>
             </div>
@@ -252,19 +299,29 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
         }
       />
       <Card>
-         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border/20 pb-5">
-          <div className="relative flex-1 min-w-[240px] max-w-md">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="mb-6 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 sm:gap-4 border-b border-border/20 pb-5">
+          <div className="relative flex-1 min-w-0 max-w-md">
+            <Search className="absolute left-3 sm:left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search..."
-              className="w-full rounded-2xl border border-border/60 bg-background/40 py-2.5 pl-11 pr-4 text-xs font-semibold outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-background/80"
+              className="w-full rounded-2xl border border-border/60 bg-background/40 py-2.5 pl-10 sm:pl-11 pr-10 text-xs font-semibold outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-background/80 min-h-[44px]"
             />
+            {q && (
+              <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition p-1">
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/5 border border-primary/20 px-4 py-2 rounded-full shadow-inner flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            Showing {filtered.length} of {rows.length} records
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={exportCSV} className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 sm:px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary/40 transition cursor-pointer min-h-[44px]">
+              <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Export CSV</span><span className="sm:hidden">Export</span>
+            </button>
+            <div className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/5 border border-primary/20 px-3 sm:px-4 py-2 rounded-full shadow-inner flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              {filtered.length}/{rows.length}
+            </div>
           </div>
         </div>
         {filtered.length === 0 ? (
@@ -275,18 +332,34 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b border-border/50 text-left text-xs uppercase tracking-widest text-muted-foreground">
-                  <tr>{config.columns.map((c) => <th key={String(c.key)} className="pb-3 pr-3 font-semibold">{c.label}</th>)}<th /></tr>
+                  <tr>
+                    {config.columns.map((c) => (
+                      <th
+                        key={String(c.key)}
+                        className={`pb-3 pr-3 font-semibold ${c.sortable !== false ? "cursor-pointer hover:text-primary select-none transition" : ""}`}
+                        onClick={() => c.sortable !== false && handleSort(String(c.key))}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          {c.label}
+                          {c.sortable !== false && sortKey === String(c.key) && (
+                            sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                          )}
+                        </span>
+                      </th>
+                    ))}
+                    <th />
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
-                  {filtered.map((r) => (
+                  {paged.map((r) => (
                     <tr key={r.id} className="hover:bg-primary/[0.02] dark:hover:bg-primary/[0.04] transition-colors duration-150">
                       {config.columns.map((c) => (
                         <td key={String(c.key)} className="py-4 pr-3 text-slate-800 dark:text-slate-250 font-medium">{c.render ? c.render(r) : String((r as any)[c.key] ?? "—")}</td>
                       ))}
                       <td className="py-4 text-right">
-                        <div className="inline-flex gap-1.5">
-                          {canEdit && <button onClick={() => openEdit(r)} className="rounded-full p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 transition"><Pencil className="h-4.5 w-4.5" /></button>}
-                          {canDelete && <button onClick={() => remove(r)} className="rounded-full p-2 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition"><Trash2 className="h-4.5 w-4.5" /></button>}
+                        <div className="inline-flex gap-1">
+                          {canEdit && <button onClick={() => openEdit(r)} className="rounded-full p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 transition min-h-[44px] min-w-[44px] flex items-center justify-center" title="Edit"><Pencil className="h-4 w-4 sm:h-4.5 sm:w-4.5" /></button>}
+                          {canDelete && <button onClick={() => setDeleteTarget(r)} className="rounded-full p-2.5 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition min-h-[44px] min-w-[44px] flex items-center justify-center" title="Delete"><Trash2 className="h-4 w-4 sm:h-4.5 sm:w-4.5" /></button>}
                         </div>
                       </td>
                     </tr>
@@ -297,15 +370,15 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
 
             {/* Mobile Card Grid View */}
             <div className="md:hidden space-y-4">
-              {filtered.map((r) => (
+              {paged.map((r) => (
                 <div key={r.id} className="rounded-2xl border border-border/50 bg-background/30 p-4.5 space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="font-extrabold text-sm text-foreground">
                       {config.columns[0]?.render ? config.columns[0].render(r) : String((r as any)[config.columns[0].key] ?? "—")}
                     </div>
                     <div className="inline-flex gap-1">
-                      {canEdit && <button onClick={() => openEdit(r)} className="rounded-full p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 transition" title="Edit"><Pencil className="h-4 w-4" /></button>}
-                      {canDelete && <button onClick={() => remove(r)} className="rounded-full p-1.5 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition" title="Delete"><Trash2 className="h-4 w-4" /></button>}
+                      {canEdit && <button onClick={() => openEdit(r)} className="rounded-full p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 transition min-h-[44px] min-w-[44px] flex items-center justify-center" title="Edit"><Pencil className="h-4 w-4" /></button>}
+                      {canDelete && <button onClick={() => setDeleteTarget(r)} className="rounded-full p-2.5 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition min-h-[44px] min-w-[44px] flex items-center justify-center" title="Delete"><Trash2 className="h-4 w-4" /></button>}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3.5 text-xs border-t border-border/20 pt-3">
@@ -321,6 +394,56 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
                 </div>
               ))}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-5 border-t border-border/20 mt-4">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Page {safePage} of {totalPages}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setPage(Math.max(1, safePage - 1))}
+                    disabled={safePage <= 1}
+                    className="rounded-lg border border-border/50 p-2.5 text-muted-foreground hover:text-primary hover:border-primary/40 transition disabled:opacity-30 disabled:cursor-not-allowed min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (safePage <= 3) {
+                      pageNum = i + 1;
+                    } else if (safePage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = safePage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPage(pageNum)}
+                        className={`min-w-[36px] h-9 rounded-lg text-xs font-bold transition min-h-[44px] ${
+                          pageNum === safePage
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/40"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => setPage(Math.min(totalPages, safePage + 1))}
+                    disabled={safePage >= totalPages}
+                    className="rounded-lg border border-border/50 p-2.5 text-muted-foreground hover:text-primary hover:border-primary/40 transition disabled:opacity-30 disabled:cursor-not-allowed min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </Card>
@@ -352,7 +475,7 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
                     className="w-full rounded-2xl border border-border/60 bg-background/50 px-4.5 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-background/80"
                   >
                     <option value="">Select Option…</option>
-                    {f.options!.map((o) => <option key={o}>{o}</option>)}
+                    {f.options!.map((o) => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </label>
               );
@@ -364,6 +487,14 @@ export function CrudPage<T extends { id: string; createdAt?: string }>({ config 
           </div>
         </form>
       </Modal>
+
+      <DeleteModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={remove}
+        itemName={deleteTarget ? String((deleteTarget as any)[config.columns[0]?.key] || "") : undefined}
+        message="Delete this record permanently?"
+      />
     </div>
   );
 }

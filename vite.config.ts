@@ -22,4 +22,11 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    ssr: {
+      // cloudflare:workers is only available at Workers runtime, not during build.
+      // Externalize it to prevent Rollup from trying to resolve the import.
+      external: ["cloudflare:workers"],
+    },
+  },
 });
