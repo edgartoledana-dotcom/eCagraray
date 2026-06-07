@@ -60,6 +60,9 @@ export function checkRateLimit(key: string, maxAttempts: number = RATE_LIMIT_MAX
   remaining: number;
   resetAfterMs: number;
 } {
+  // Lazy cleanup of expired entries to prevent memory leaks (replaces module-level setInterval)
+  cleanupExpiredRateLimits();
+
   const now = Date.now();
   const entry = rateLimitStore.get(key);
 
@@ -81,17 +84,18 @@ export function checkRateLimit(key: string, maxAttempts: number = RATE_LIMIT_MAX
 }
 
 /**
- * Periodic cleanup of expired rate limit entries to prevent memory leaks.
- * Runs every 5 minutes.
+ * Lazily clean up expired rate limit entries (called inside checkRateLimit
+ * instead of a module-level setInterval, which is disallowed in Cloudflare
+ * Workers at global scope).
  */
-setInterval(() => {
+function cleanupExpiredRateLimits() {
   const now = Date.now();
   for (const [key, entry] of rateLimitStore) {
     if (now >= entry.resetAt) {
       rateLimitStore.delete(key);
     }
   }
-}, 5 * 60 * 1000);
+}
 
 // ---------------------------------------------------------------------------
 // Password hashing (scrypt with salt)
